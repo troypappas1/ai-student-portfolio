@@ -1,0 +1,20 @@
+{
+  "name": "ledger",
+  "version": "0.1.0",
+  "description": "AI-curated student artifact portfolio (pilot)",
+  "main": "server.js",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "seed": "node seed.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.21.0",
+    "express-rate-limit": "^7.4.0",
+    "express-session": "^1.18.0"
+  }
+}

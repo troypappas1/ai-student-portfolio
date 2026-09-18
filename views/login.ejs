@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ledger — Sign in</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="login-shell">
+    <div class="login-box">
+      <h1>Ledger</h1>
+      <p class="muted">Enter the PIN you were given to see your portfolio.</p>
+      <form method="POST" action="/login">
+        <label for="pin">PIN</label>
+        <input id="pin" name="pin" maxlength="8" autofocus autocomplete="off" placeholder="XXXXXXXX">
+        <% if (error) { %><div class="error"><%= error %></div><% } %>
+        <div style="margin-top:18px;">
+          <button class="btn" type="submit" style="width:100%;">Sign in</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

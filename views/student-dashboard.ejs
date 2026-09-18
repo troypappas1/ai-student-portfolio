@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ledger — <%= user.name %></title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">Ledger</div>
+    <div class="row">
+      <span class="who"><%= user.name %> · student</span>
+      <form method="POST" action="/logout"><button class="btn ghost small" type="submit">Sign out</button></form>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <h2>Add an artifact</h2>
+    <div class="card">
+      <form method="POST" action="/student/artifacts">
+        <div class="grid-2">
+          <div>
+            <label for="title">Title</label>
+            <input id="title" name="title" required placeholder="e.g. Autonomous line-follower robot">
+          </div>
+          <div>
+            <label for="class_or_team">Class / team</label>
+            <input id="class_or_team" name="class_or_team" placeholder="e.g. Robotics Club">
+          </div>
+        </div>
+        <div class="grid-2">
+          <div>
+            <label for="year">Year</label>
+            <input id="year" name="year" required placeholder="<%= currentYear %>" value="<%= currentYear %>">
+          </div>
+          <div>
+            <label for="project_link">Project link (optional)</label>
+            <input id="project_link" name="project_link" type="url" placeholder="https://github.com/you/project">
+          </div>
+        </div>
+        <label for="raw_description">Describe what you made and why it mattered to you</label>
+        <textarea id="raw_description" name="raw_description" rows="4" required
+          placeholder="Tell us what this was, what you did, and what you're proud of. An AI draft summary will be generated from this and reviewed by your teacher before it goes on your portfolio."></textarea>
+        <div style="margin-top:14px;">
+          <button class="btn clay" type="submit">Submit for review</button>
+        </div>
+      </form>
+    </div>
+
+    <h2>Your portfolio</h2>
+    <% if (years.length === 0) { %>
+      <p class="muted">Nothing submitted yet — add your first artifact above.</p>
+    <% } %>
+    <% years.forEach(function(year) { %>
+      <h3><%= year %></h3>
+      <% byYear[year].forEach(function(a) { %>
+        <div class="card">
+          <div class="row" style="justify-content: space-between;">
+            <strong><%= a.title %></strong>
+            <span class="tag <%= a.status %>"><%= a.status %></span>
+          </div>
+          <p class="muted" style="margin: 4px 0 10px;">
+            <%= a.class_or_team || 'No class/team specified' %>
+            <% if (a.project_link) { %> · <a href="<%= a.project_link %>" target="_blank" rel="noopener">project link</a><% } %>
+          </p>
+          <p><%= a.ai_summary %></p>
+          <% if (a.status === 'pending') { %>
+            <p class="muted">Waiting on a teacher to review the AI-drafted summary above.</p>
+          <% } %>
+        </div>
+      <% }); %>
+    <% }); %>
+  </div>
+</body>
+</html>

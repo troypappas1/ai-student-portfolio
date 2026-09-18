@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ledger — <%= student.name %></title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">Ledger</div>
+    <div class="row">
+      <span class="who"><%= user.name %> · admin</span>
+      <form method="POST" action="/logout"><button class="btn ghost small" type="submit">Sign out</button></form>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <p><a href="/admin">&larr; Back to admin</a></p>
+    <h2><%= student.name %></h2>
+    <p class="muted"><%= student.school_email || 'No school email on file' %></p>
+
+    <% if (artifacts.length === 0) { %>
+      <p class="muted">No artifacts submitted yet.</p>
+    <% } %>
+    <% artifacts.forEach(function(a) { %>
+      <div class="card">
+        <div class="row" style="justify-content: space-between;">
+          <strong><%= a.title %></strong>
+          <span class="tag <%= a.status %>"><%= a.status %></span>
+        </div>
+        <p class="muted" style="margin: 4px 0 10px;">
+          <%= a.year %> · <%= a.class_or_team || 'No class/team specified' %>
+          <% if (a.project_link) { %> · <a href="<%= a.project_link %>" target="_blank" rel="noopener">project link</a><% } %>
+        </p>
+        <p><%= a.ai_summary %></p>
+      </div>
+    <% }); %>
+  </div>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ledger — Admin</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">Ledger</div>
+    <div class="row">
+      <span class="who"><%= user.name %> · admin</span>
+      <form method="POST" action="/logout"><button class="btn ghost small" type="submit">Sign out</button></form>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <% if (newStudent) { %>
+      <div class="pin-callout">
+        <strong><%= newStudent.name %></strong> was added. Give them this PIN now — it will not be shown again:
+        <div class="pin"><%= newStudent.pin %></div>
+      </div>
+    <% } %>
+
+    <h2>Review queue <span class="muted">(<%= pending.length %> pending)</span></h2>
+    <% if (pending.length === 0) { %>
+      <p class="muted">Nothing waiting on review.</p>
+    <% } %>
+    <% pending.forEach(function(a) { %>
+      <div class="card">
+        <div class="row" style="justify-content: space-between;">
+          <strong><%= a.title %></strong>
+          <span class="muted"><%= a.student_name %> · <%= a.year %></span>
+        </div>
+        <p class="muted" style="margin: 4px 0 10px;">
+          <%= a.class_or_team || 'No class/team specified' %>
+          <% if (a.project_link) { %> · <a href="<%= a.project_link %>" target="_blank" rel="noopener">project link</a><% } %>
+        </p>
+        <p class="muted"><strong>Student's own words:</strong> <%= a.raw_description %></p>
+        <form method="POST" action="/admin/artifacts/<%= a.id %>/approve">
+          <label for="summary-<%= a.id %>">AI-drafted summary (edit before approving)</label>
+          <textarea id="summary-<%= a.id %>" name="ai_summary" rows="3"><%= a.ai_summary %></textarea>
+          <div class="row" style="margin-top:10px;">
+            <button class="btn" type="submit">Approve</button>
+            <button class="btn ghost" type="submit" formaction="/admin/artifacts/<%= a.id %>/reject">Reject</button>
+          </div>
+        </form>
+      </div>
+    <% }); %>
+
+    <h2>Students</h2>
+    <div class="card">
+      <table>
+        <thead><tr><th>Name</th><th>Approved</th><th>Pending</th><th></th></tr></thead>
+        <tbody>
+          <% students.forEach(function(s) { %>
+            <tr>
+              <td><%= s.name %></td>
+              <td><%= s.approved || 0 %></td>
+              <td><%= s.pending || 0 %></td>
+              <td><a href="/admin/students/<%= s.id %>">View portfolio &rarr;</a></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Add a student</h2>
+    <div class="card">
+      <form method="POST" action="/admin/students">
+        <div class="grid-2">
+          <div>
+            <label for="name">Full name</label>
+            <input id="name" name="name" required>
+          </div>
+          <div>
+            <label for="school_email">School email (optional)</label>
+            <input id="school_email" name="school_email" type="email">
+          </div>
+        </div>
+        <div style="margin-top:14px;">
+          <button class="btn clay" type="submit">Create student + generate PIN</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>
