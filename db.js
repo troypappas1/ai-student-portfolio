@@ -112,7 +112,30 @@ conn.exec(`
     metadata TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
+`);
 
+// Lightweight migration for databases created before a column existed —
+// CREATE TABLE IF NOT EXISTS only helps on a brand new database; a table
+// that already exists (e.g. the currently-deployed instance's SQLite file)
+// keeps its original columns unless we add them here explicitly.
+function addColumnIfMissing(table, column, definition) {
+  const existing = conn.prepare(`PRAGMA table_info(${table})`).all();
+  if (!existing.some((c) => c.name === column)) {
+    conn.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+  }
+}
+
+addColumnIfMissing('users', 'graduation_year', 'INTEGER');
+addColumnIfMissing('artifacts', 'ai_generated', 'INTEGER NOT NULL DEFAULT 0');
+// Existing enrollments predate the request/approve workflow, so they were
+// already de facto active — default them to 'approved' rather than
+// 'pending' so nobody is silently locked out of a class they were already in.
+addColumnIfMissing('enrollments', 'status', "TEXT NOT NULL DEFAULT 'approved'");
+addColumnIfMissing('enrollments', 'requested_at', 'TEXT');
+addColumnIfMissing('enrollments', 'decided_by', 'INTEGER REFERENCES users(id)');
+addColumnIfMissing('enrollments', 'decided_at', 'TEXT');
+
+conn.exec(`
   CREATE INDEX IF NOT EXISTS idx_artifacts_student ON artifacts(student_id);
   CREATE INDEX IF NOT EXISTS idx_artifacts_status ON artifacts(status);
   CREATE INDEX IF NOT EXISTS idx_artifacts_class ON artifacts(class_id);
