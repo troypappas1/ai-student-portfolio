@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Capture — Activities</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">Capture</div>
+    <div class="row">
+      <span class="who"><%= user.name %> · admin</span>
+      <form method="POST" action="/logout"><button class="btn ghost small" type="submit">Sign out</button></form>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="nav-links" style="margin-bottom:20px;">
+      <a href="/admin">Review &amp; roster</a>
+      <a href="/admin/classes">Classes</a>
+      <a href="/admin/activities" class="active">Activities</a>
+      <a href="/admin/audit">Audit log</a>
+    </div>
+
+    <h2>Teams &amp; clubs</h2>
+    <div class="card">
+      <table>
+        <thead><tr><th>Name</th><th>Type</th><th>Year</th><th>Members</th><th></th></tr></thead>
+        <tbody>
+          <% activities.forEach(function(a) { %>
+            <tr>
+              <td><%= a.name %></td>
+              <td><%= a.type || '' %></td>
+              <td><%= a.academic_year %></td>
+              <td><%= a.student_count %></td>
+              <td><a href="/admin/activities/<%= a.id %>">Roster &rarr;</a></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+      <% if (activities.length === 0) { %><p class="muted">None yet.</p><% } %>
+    </div>
+
+    <h2>Add a team/club</h2>
+    <div class="card">
+      <form method="POST" action="/admin/activities">
+        <div class="grid-2">
+          <div>
+            <label for="name">Name</label>
+            <input id="name" name="name" required placeholder="Robotics Club">
+          </div>
+          <div>
+            <label for="type">Type (optional)</label>
+            <input id="type" name="type" placeholder="Club, Team, Community">
+          </div>
+        </div>
+        <label for="academic_year">Academic year</label>
+        <input id="academic_year" name="academic_year" required placeholder="2026-2027">
+        <label for="description">Description (optional)</label>
+        <input id="description" name="description">
+        <div style="margin-top:14px;"><button class="btn clay" type="submit">Create</button></div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

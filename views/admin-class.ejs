@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Capture — <%= cls.name %></title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">Capture</div>
+    <div class="row">
+      <span class="who"><%= user.name %> · admin</span>
+      <form method="POST" action="/logout"><button class="btn ghost small" type="submit">Sign out</button></form>
+    </div>
+  </div>
+  <div class="wrap">
+    <p><a href="/admin/classes">&larr; Back to classes</a></p>
+    <h2><%= cls.name %> <span class="muted">(<%= cls.academic_year %>)</span></h2>
+
+    <div class="card">
+      <table>
+        <thead><tr><th>Student</th></tr></thead>
+        <tbody><% roster.forEach(function(s) { %><tr><td><%= s.name %></td></tr><% }); %></tbody>
+      </table>
+      <% if (roster.length === 0) { %><p class="muted">No students enrolled yet.</p><% } %>
+    </div>
+
+    <h3>Enroll a student</h3>
+    <div class="card">
+      <form method="POST" action="/admin/classes/<%= cls.id %>/enroll" class="row">
+        <select name="student_id" style="max-width:260px;">
+          <% available.forEach(function(s) { %><option value="<%= s.id %>"><%= s.name %></option><% }); %>
+        </select>
+        <button class="btn small" type="submit">Enroll</button>
+      </form>
+      <% if (available.length === 0) { %><p class="muted">All students are already enrolled.</p><% } %>
+    </div>
+  </div>
+</body>
+</html>

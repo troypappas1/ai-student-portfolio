@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Capture — Teacher</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">Capture</div>
+    <div class="row">
+      <span class="who"><%= user.name %> · teacher</span>
+      <form method="POST" action="/logout"><button class="btn ghost small" type="submit">Sign out</button></form>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <h2>Review queue <span class="muted">(<%= pending.length %> pending)</span></h2>
+    <% if (pending.length === 0) { %><p class="muted">Nothing waiting on you right now.</p><% } %>
+    <% pending.forEach(function(a) { %>
+      <div class="card">
+        <div class="row" style="justify-content: space-between;">
+          <strong><%= a.title %></strong>
+          <span class="muted"><%= a.student_name %> · <%= a.class_name %> · <%= a.academic_year %></span>
+        </div>
+        <p class="muted" style="margin: 4px 0 10px;">
+          <% if (a.project_link) { %><a href="<%= a.project_link %>" target="_blank" rel="noopener">view work</a><% } %>
+        </p>
+        <p class="muted"><strong>Student's own words:</strong> <%= a.raw_description %></p>
+        <form method="POST" action="/teacher/artifacts/<%= a.id %>/approve">
+          <label for="summary-<%= a.id %>">Summary (AI-drafted below — edit to make it the official, teacher-approved version)</label>
+          <textarea id="summary-<%= a.id %>" name="teacher_summary" rows="3"><%= a.ai_summary %></textarea>
+          <div class="row" style="margin-top:10px;">
+            <button class="btn" type="submit">Approve</button>
+            <button class="btn ghost" type="submit" formaction="/teacher/artifacts/<%= a.id %>/reject">Reject</button>
+          </div>
+        </form>
+      </div>
+    <% }); %>
+
+    <h2>Your classes</h2>
+    <div class="card">
+      <table>
+        <thead><tr><th>Class</th><th>Year</th><th>Students</th><th></th></tr></thead>
+        <tbody>
+          <% classes.forEach(function(c) { %>
+            <tr>
+              <td><%= c.name %></td>
+              <td><%= c.academic_year %></td>
+              <td><%= c.student_count %></td>
+              <td><a href="/teacher/classes/<%= c.id %>">View roster &rarr;</a></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+      <% if (classes.length === 0) { %><p class="muted">No classes assigned to you yet — ask an admin to assign you.</p><% } %>
+    </div>
+  </div>
+</body>
+</html>

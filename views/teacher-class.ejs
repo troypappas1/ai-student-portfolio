@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Capture — <%= cls.name %></title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">Capture</div>
+    <div class="row">
+      <span class="who"><%= user.name %> · teacher</span>
+      <form method="POST" action="/logout"><button class="btn ghost small" type="submit">Sign out</button></form>
+    </div>
+  </div>
+  <div class="wrap">
+    <p><a href="/teacher">&larr; Back</a></p>
+    <h2><%= cls.name %> <span class="muted">(<%= cls.academic_year %>)</span></h2>
+    <div class="card">
+      <table>
+        <thead><tr><th>Student</th><th>Artifacts in this class</th></tr></thead>
+        <tbody>
+          <% roster.forEach(function(s) { %>
+            <tr><td><%= s.name %></td><td><%= s.artifact_count %></td></tr>
+          <% }); %>
+        </tbody>
+      </table>
+      <% if (roster.length === 0) { %><p class="muted">No students enrolled yet.</p><% } %>
+    </div>
+  </div>
+</body>
+</html>

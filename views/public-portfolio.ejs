@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Capture — <%= studentName %>'s portfolio</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">Capture</div>
+    <span class="who">Sonoma Academy</span>
+  </div>
+  <div class="wrap">
+    <p class="school-name">SONOMA ACADEMY</p>
+    <h1><%= studentName %></h1>
+    <p class="tagline">Your work. Your journey. Your story.</p>
+
+    <% if (allYears.length === 0) { %>
+      <p class="muted">Nothing has been shared here yet.</p>
+    <% } %>
+    <% allYears.forEach(function(year) { %>
+      <div class="year-header">
+        <div class="year-range"><%= year %></div>
+        <h3><%= (yearMeta[year] && yearMeta[year].title) || year %></h3>
+        <% if (yearMeta[year] && yearMeta[year].description) { %><p class="muted"><%= yearMeta[year].description %></p><% } %>
+      </div>
+      <% (byYear[year] || []).forEach(function(a) { %>
+        <div class="card">
+          <strong><%= a.title %></strong>
+          <p class="muted" style="margin: 4px 0 10px;">
+            <%= a.class_name || a.activity_name || 'Personal project' %>
+            <% if (a.artifact_type) { %> · <%= a.artifact_type %><% } %>
+            <% if (a.project_link) { %> · <a href="<%= a.project_link %>" target="_blank" rel="noopener">view work</a><% } %>
+          </p>
+          <p><%= a.teacher_summary || a.ai_summary %></p>
+        </div>
+      <% }); %>
+    <% }); %>
+  </div>
+</body>
+</html>

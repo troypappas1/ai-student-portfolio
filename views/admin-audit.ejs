@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Capture — Audit log</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">Capture</div>
+    <div class="row">
+      <span class="who"><%= user.name %> · admin</span>
+      <form method="POST" action="/logout"><button class="btn ghost small" type="submit">Sign out</button></form>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="nav-links" style="margin-bottom:20px;">
+      <a href="/admin">Review &amp; roster</a>
+      <a href="/admin/classes">Classes</a>
+      <a href="/admin/activities">Activities</a>
+      <a href="/admin/audit" class="active">Audit log</a>
+    </div>
+
+    <h2>Audit log <span class="muted">(last 200 events)</span></h2>
+    <div class="card">
+      <table>
+        <thead><tr><th>When</th><th>Actor</th><th>Action</th><th>Resource</th></tr></thead>
+        <tbody>
+          <% logs.forEach(function(l) { %>
+            <tr class="audit-row">
+              <td><%= l.created_at %></td>
+              <td><%= l.actor_name || 'system / anonymous' %></td>
+              <td><%= l.action %></td>
+              <td><%= l.resource_type %><% if (l.resource_id) { %> #<%= l.resource_id %><% } %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+      <% if (logs.length === 0) { %><p class="muted">No activity logged yet.</p><% } %>
+    </div>
+  </div>
+</body>
+</html>

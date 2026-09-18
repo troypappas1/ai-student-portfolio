@@ -1,7 +1,7 @@
 {
-  "name": "ledger",
+  "name": "capture",
   "version": "0.1.0",
-  "description": "AI-curated student artifact portfolio (pilot)",
+  "description": "Capture — Sonoma Academy student portfolio (pilot)",
   "main": "server.js",
   "engines": {
     "node": ">=22.5.0"

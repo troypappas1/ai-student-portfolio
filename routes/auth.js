@@ -5,6 +5,12 @@ const { hashPin } = require('../lib/pin');
 
 const router = express.Router();
 
+function homeFor(role) {
+  if (role === 'admin') return '/admin';
+  if (role === 'teacher') return '/teacher';
+  return '/student';
+}
+
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 20,
@@ -15,7 +21,7 @@ const loginLimiter = rateLimit({
 
 router.get('/login', (req, res) => {
   if (req.session.user) {
-    return res.redirect(req.session.user.role === 'admin' ? '/admin' : '/student');
+    return res.redirect(homeFor(req.session.user.role));
   }
   res.render('login', { error: null });
 });
@@ -30,7 +36,7 @@ router.post('/login', loginLimiter, (req, res) => {
   req.session.regenerate((err) => {
     if (err) return res.render('login', { error: 'Something went wrong. Try again.' });
     req.session.user = { id: user.id, name: user.name, role: user.role };
-    res.redirect(user.role === 'admin' ? '/admin' : '/student');
+    res.redirect(homeFor(user.role));
   });
 });
 

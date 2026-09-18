@@ -7,7 +7,9 @@ require('./db'); // ensures tables exist before routes touch them
 
 const authRoutes = require('./routes/auth');
 const studentRoutes = require('./routes/student');
+const teacherRoutes = require('./routes/teacher');
 const adminRoutes = require('./routes/admin');
+const publicRoutes = require('./routes/public');
 
 const app = express();
 app.set('trust proxy', 1); // needed for correct client IPs / rate limiting behind Railway's proxy
@@ -32,9 +34,11 @@ app.use(
 app.get('/', (req, res) => res.redirect('/login'));
 app.use(authRoutes);
 app.use(studentRoutes);
+app.use(teacherRoutes);
 app.use(adminRoutes);
+app.use(publicRoutes);
 
 app.use((req, res) => res.status(404).send('Not found'));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Ledger running on http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`Capture running on http://localhost:${PORT}`));

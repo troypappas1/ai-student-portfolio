@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Ledger — Admin</title>
+  <title>Capture — Admin</title>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
   <div class="topbar">
-    <div class="brand">Ledger</div>
+    <div class="brand">Capture</div>
     <div class="row">
       <span class="who"><%= user.name %> · admin</span>
       <form method="POST" action="/logout"><button class="btn ghost small" type="submit">Sign out</button></form>
@@ -15,10 +15,17 @@
   </div>
 
   <div class="wrap">
-    <% if (newStudent) { %>
+    <div class="nav-links" style="margin-bottom:20px;">
+      <a href="/admin" class="active">Review &amp; roster</a>
+      <a href="/admin/classes">Classes</a>
+      <a href="/admin/activities">Activities</a>
+      <a href="/admin/audit">Audit log</a>
+    </div>
+
+    <% if (newPerson) { %>
       <div class="pin-callout">
-        <strong><%= newStudent.name %></strong> was added. Give them this PIN now — it will not be shown again:
-        <div class="pin"><%= newStudent.pin %></div>
+        <strong><%= newPerson.name %></strong> (<%= newPerson.role %>) was added. Give them this PIN now — it will not be shown again:
+        <div class="pin"><%= newPerson.pin %></div>
       </div>
     <% } %>
 
@@ -30,16 +37,16 @@
       <div class="card">
         <div class="row" style="justify-content: space-between;">
           <strong><%= a.title %></strong>
-          <span class="muted"><%= a.student_name %> · <%= a.year %></span>
+          <span class="muted"><%= a.student_name %> · <%= a.academic_year %></span>
         </div>
         <p class="muted" style="margin: 4px 0 10px;">
-          <%= a.class_or_team || 'No class/team specified' %>
-          <% if (a.project_link) { %> · <a href="<%= a.project_link %>" target="_blank" rel="noopener">project link</a><% } %>
+          <%= a.class_name || a.activity_name || 'Personal project' %>
+          <% if (a.project_link) { %> · <a href="<%= a.project_link %>" target="_blank" rel="noopener">view work</a><% } %>
         </p>
         <p class="muted"><strong>Student's own words:</strong> <%= a.raw_description %></p>
         <form method="POST" action="/admin/artifacts/<%= a.id %>/approve">
-          <label for="summary-<%= a.id %>">AI-drafted summary (edit before approving)</label>
-          <textarea id="summary-<%= a.id %>" name="ai_summary" rows="3"><%= a.ai_summary %></textarea>
+          <label for="summary-<%= a.id %>">Summary (AI-drafted below — edit to make it official)</label>
+          <textarea id="summary-<%= a.id %>" name="teacher_summary" rows="3"><%= a.ai_summary %></textarea>
           <div class="row" style="margin-top:10px;">
             <button class="btn" type="submit">Approve</button>
             <button class="btn ghost" type="submit" formaction="/admin/artifacts/<%= a.id %>/reject">Reject</button>
@@ -65,9 +72,17 @@
       </table>
     </div>
 
-    <h2>Add a student</h2>
+    <h2>Teachers</h2>
     <div class="card">
-      <form method="POST" action="/admin/students">
+      <% if (teachers.length === 0) { %><p class="muted">No teacher accounts yet — add one below.</p><% } %>
+      <ul>
+        <% teachers.forEach(function(t) { %><li><%= t.name %> <span class="muted"><%= t.school_email || '' %></span></li><% }); %>
+      </ul>
+    </div>
+
+    <h2>Add a person</h2>
+    <div class="card">
+      <form method="POST" action="/admin/people">
         <div class="grid-2">
           <div>
             <label for="name">Full name</label>
@@ -78,8 +93,14 @@
             <input id="school_email" name="school_email" type="email">
           </div>
         </div>
+        <label for="role">Role</label>
+        <select id="role" name="role">
+          <option value="student">Student</option>
+          <option value="teacher">Teacher</option>
+        </select>
+        <p class="muted">Additional admin accounts aren't created through this form — add them directly via the seed script for now.</p>
         <div style="margin-top:14px;">
-          <button class="btn clay" type="submit">Create student + generate PIN</button>
+          <button class="btn clay" type="submit">Create person + generate PIN</button>
         </div>
       </form>
     </div>

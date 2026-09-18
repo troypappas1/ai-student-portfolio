@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Ledger — <%= student.name %></title>
+  <title>Capture — <%= student.name %></title>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
   <div class="topbar">
-    <div class="brand">Ledger</div>
+    <div class="brand">Capture</div>
     <div class="row">
       <span class="who"><%= user.name %> · admin</span>
       <form method="POST" action="/logout"><button class="btn ghost small" type="submit">Sign out</button></form>
@@ -19,6 +19,27 @@
     <h2><%= student.name %></h2>
     <p class="muted"><%= student.school_email || 'No school email on file' %></p>
 
+    <h3>Set a year title</h3>
+    <div class="card">
+      <form method="POST" action="/admin/students/<%= student.id %>/years">
+        <div class="grid-2">
+          <div>
+            <label for="academic_year">Academic year</label>
+            <input id="academic_year" name="academic_year" placeholder="2026-2027" required>
+          </div>
+          <div>
+            <label for="title">Title</label>
+            <input id="title" name="title" placeholder="e.g. Finding My Footing">
+          </div>
+        </div>
+        <label for="description">Description (optional)</label>
+        <input id="description" name="description">
+        <div style="margin-top:12px;">
+          <button class="btn small" type="submit">Save</button>
+        </div>
+      </form>
+    </div>
+
     <% if (artifacts.length === 0) { %>
       <p class="muted">No artifacts submitted yet.</p>
     <% } %>
@@ -29,10 +50,10 @@
           <span class="tag <%= a.status %>"><%= a.status %></span>
         </div>
         <p class="muted" style="margin: 4px 0 10px;">
-          <%= a.year %> · <%= a.class_or_team || 'No class/team specified' %>
-          <% if (a.project_link) { %> · <a href="<%= a.project_link %>" target="_blank" rel="noopener">project link</a><% } %>
+          <%= a.academic_year %> · <%= a.class_name || a.activity_name || 'Personal project' %>
+          <% if (a.project_link) { %> · <a href="<%= a.project_link %>" target="_blank" rel="noopener">view work</a><% } %>
         </p>
-        <p><%= a.ai_summary %></p>
+        <p><%= a.teacher_summary || a.ai_summary %></p>
       </div>
     <% }); %>
   </div>

@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Ledger — <%= user.name %></title>
+  <title>Capture — <%= user.name %></title>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
   <div class="topbar">
-    <div class="brand">Ledger</div>
+    <div class="brand">Capture</div>
     <div class="row">
       <span class="who"><%= user.name %> · student</span>
       <form method="POST" action="/logout"><button class="btn ghost small" type="submit">Sign out</button></form>
@@ -15,29 +15,61 @@
   </div>
 
   <div class="wrap">
+    <% if (justCreatedLink) { %>
+      <div class="pin-callout">
+        Share link created. Copy it now — it won't be shown again on this screen (you can revoke it any time below):
+        <div class="share-link-box" style="margin-top:8px;">/p/<%= justCreatedLink %></div>
+      </div>
+    <% } %>
+
     <h2>Add an artifact</h2>
     <div class="card">
-      <form method="POST" action="/student/artifacts">
+      <form method="POST" action="/student/artifacts" id="artifact-form">
+        <label>This artifact is for</label>
+        <div class="row">
+          <label style="font-weight:400;"><input type="radio" name="context_type" value="class" checked style="width:auto;"> A class</label>
+          <label style="font-weight:400;"><input type="radio" name="context_type" value="activity" style="width:auto;"> A team/club</label>
+          <label style="font-weight:400;"><input type="radio" name="context_type" value="personal" style="width:auto;"> A personal project</label>
+        </div>
+
+        <div id="ctx-class" class="ctx-block">
+          <label for="class_id">Class</label>
+          <select id="class_id" name="class_id">
+            <% classes.forEach(function(c) { %>
+              <option value="<%= c.id %>"><%= c.name %> (<%= c.academic_year %>)</option>
+            <% }); %>
+          </select>
+          <% if (classes.length === 0) { %><p class="muted">You're not enrolled in any classes yet — ask your admin/teacher to add you.</p><% } %>
+        </div>
+
+        <div id="ctx-activity" class="ctx-block" style="display:none;">
+          <label for="activity_id">Team / club</label>
+          <select id="activity_id" name="activity_id">
+            <% activities.forEach(function(a) { %>
+              <option value="<%= a.id %>"><%= a.name %> (<%= a.academic_year %>)</option>
+            <% }); %>
+          </select>
+          <% if (activities.length === 0) { %><p class="muted">You're not a member of any teams/clubs yet.</p><% } %>
+        </div>
+
+        <div id="ctx-personal" class="ctx-block" style="display:none;">
+          <label for="academic_year">Academic year</label>
+          <input id="academic_year" name="academic_year" placeholder="<%= currentYear %>" value="<%= currentYear %>">
+        </div>
+
         <div class="grid-2">
           <div>
             <label for="title">Title</label>
             <input id="title" name="title" required placeholder="e.g. Autonomous line-follower robot">
           </div>
           <div>
-            <label for="class_or_team">Class / team</label>
-            <input id="class_or_team" name="class_or_team" placeholder="e.g. Robotics Club">
+            <label for="artifact_type">Type</label>
+            <input id="artifact_type" name="artifact_type" placeholder="e.g. Video, PDF, Writing, Presentation">
           </div>
         </div>
-        <div class="grid-2">
-          <div>
-            <label for="year">Year</label>
-            <input id="year" name="year" required placeholder="<%= currentYear %>" value="<%= currentYear %>">
-          </div>
-          <div>
-            <label for="project_link">Project link (optional)</label>
-            <input id="project_link" name="project_link" type="url" placeholder="https://github.com/you/project">
-          </div>
-        </div>
+        <label for="project_link">Link to your work (optional)</label>
+        <input id="project_link" name="project_link" type="url" placeholder="https://drive.google.com/...">
+
         <label for="raw_description">Describe what you made and why it mattered to you</label>
         <textarea id="raw_description" name="raw_description" rows="4" required
           placeholder="Tell us what this was, what you did, and what you're proud of. An AI draft summary will be generated from this and reviewed by your teacher before it goes on your portfolio."></textarea>
@@ -47,29 +79,77 @@
       </form>
     </div>
 
+    <h2>Share your portfolio</h2>
+    <div class="card">
+      <p class="muted">Portfolios are private by default. Create a link to share your approved work with a college, a recommender, or family — you can revoke it any time.</p>
+      <form method="POST" action="/student/share" class="row">
+        <input name="label" placeholder="Label (e.g. College applications)" style="max-width:260px;">
+        <select name="expires_in_days" style="max-width:180px;">
+          <option value="">Never expires</option>
+          <option value="7">Expires in 7 days</option>
+          <option value="30">Expires in 30 days</option>
+          <option value="90">Expires in 90 days</option>
+        </select>
+        <button class="btn" type="submit">Create link</button>
+      </form>
+      <% if (shareLinks.length > 0) { %>
+        <table style="margin-top:14px;">
+          <thead><tr><th>Label</th><th>Expires</th><th></th></tr></thead>
+          <tbody>
+            <% shareLinks.forEach(function(l) { %>
+              <tr>
+                <td><%= l.label || '(untitled)' %> <br><span class="muted">/p/<%= l.token %></span></td>
+                <td><%= l.expires_at ? l.expires_at : 'Never' %></td>
+                <td>
+                  <form method="POST" action="/student/share/<%= l.id %>/revoke">
+                    <button class="btn ghost small" type="submit">Revoke</button>
+                  </form>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      <% } %>
+    </div>
+
     <h2>Your portfolio</h2>
-    <% if (years.length === 0) { %>
+    <% if (allYears.length === 0) { %>
       <p class="muted">Nothing submitted yet — add your first artifact above.</p>
     <% } %>
-    <% years.forEach(function(year) { %>
-      <h3><%= year %></h3>
-      <% byYear[year].forEach(function(a) { %>
+    <% allYears.forEach(function(year) { %>
+      <div class="year-header">
+        <div class="year-range"><%= year %></div>
+        <h3><%= (yearMeta[year] && yearMeta[year].title) || year %></h3>
+        <% if (yearMeta[year] && yearMeta[year].description) { %><p class="muted"><%= yearMeta[year].description %></p><% } %>
+      </div>
+      <% (byYear[year] || []).forEach(function(a) { %>
         <div class="card">
           <div class="row" style="justify-content: space-between;">
             <strong><%= a.title %></strong>
             <span class="tag <%= a.status %>"><%= a.status %></span>
           </div>
           <p class="muted" style="margin: 4px 0 10px;">
-            <%= a.class_or_team || 'No class/team specified' %>
-            <% if (a.project_link) { %> · <a href="<%= a.project_link %>" target="_blank" rel="noopener">project link</a><% } %>
+            <%= a.class_name || a.activity_name || 'Personal project' %>
+            <% if (a.artifact_type) { %> · <%= a.artifact_type %><% } %>
+            <% if (a.project_link) { %> · <a href="<%= a.project_link %>" target="_blank" rel="noopener">view work</a><% } %>
           </p>
-          <p><%= a.ai_summary %></p>
-          <% if (a.status === 'pending') { %>
-            <p class="muted">Waiting on a teacher to review the AI-drafted summary above.</p>
+          <% if (a.status === 'approved' && a.teacher_summary) { %>
+            <p><%= a.teacher_summary %></p>
+          <% } else { %>
+            <p class="muted"><span class="badge">AI draft</span> <%= a.ai_summary %></p>
+            <% if (a.status === 'pending') { %><p class="muted">Waiting on a teacher to review this.</p><% } %>
           <% } %>
         </div>
       <% }); %>
     <% }); %>
   </div>
+
+  <script>
+    const radios = document.querySelectorAll('input[name="context_type"]');
+    const blocks = { class: document.getElementById('ctx-class'), activity: document.getElementById('ctx-activity'), personal: document.getElementById('ctx-personal') };
+    radios.forEach(r => r.addEventListener('change', () => {
+      Object.entries(blocks).forEach(([key, el]) => { el.style.display = key === r.value ? 'block' : 'none'; });
+    }));
+  </script>
 </body>
 </html>
