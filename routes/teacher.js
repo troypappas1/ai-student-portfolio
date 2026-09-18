@@ -13,7 +13,9 @@ router.use('/teacher', requireRole('teacher'));
 router.get('/teacher', (req, res) => {
   const classes = db
     .prepare(
-      `SELECT classes.*, COUNT(DISTINCT enrollments.student_id) AS student_count
+      `SELECT classes.*,
+              SUM(CASE WHEN enrollments.status = 'approved' THEN 1 ELSE 0 END) AS student_count,
+              SUM(CASE WHEN enrollments.status = 'pending' THEN 1 ELSE 0 END) AS pending_count
        FROM classes
        LEFT JOIN enrollments ON enrollments.class_id = classes.id
        WHERE classes.teacher_id = ?
@@ -33,7 +35,52 @@ router.get('/teacher', (req, res) => {
     )
     .all(req.session.user.id);
 
-  res.render('teacher-dashboard', { user: req.session.user, classes, pending });
+  const pendingEnrollments = db
+    .prepare(
+      `SELECT enrollments.id, enrollments.requested_at, users.name AS student_name, classes.name AS class_name, classes.id AS class_id
+       FROM enrollments
+       JOIN classes ON classes.id = enrollments.class_id
+       JOIN users ON users.id = enrollments.student_id
+       WHERE classes.teacher_id = ? AND enrollments.status = 'pending'
+       ORDER BY enrollments.requested_at ASC`
+    )
+    .all(req.session.user.id);
+
+  res.render('teacher-dashboard', { user: req.session.user, classes, pending, pendingEnrollments });
+});
+
+router.post('/teacher/enrollments/:id/approve', (req, res) => {
+  const enrollment = db
+    .prepare(
+      `SELECT enrollments.* FROM enrollments
+       JOIN classes ON classes.id = enrollments.class_id
+       WHERE enrollments.id = ? AND classes.teacher_id = ?`
+    )
+    .get(req.params.id, req.session.user.id);
+  if (!enrollment) return res.status(403).send('Forbidden');
+
+  db.prepare(
+    `UPDATE enrollments SET status = 'approved', decided_by = ?, decided_at = datetime('now') WHERE id = ?`
+  ).run(req.session.user.id, enrollment.id);
+  logAction({ actorId: req.session.user.id, action: 'enrollment.approved', resourceType: 'enrollment', resourceId: enrollment.id });
+  res.redirect('/teacher');
+});
+
+router.post('/teacher/enrollments/:id/reject', (req, res) => {
+  const enrollment = db
+    .prepare(
+      `SELECT enrollments.* FROM enrollments
+       JOIN classes ON classes.id = enrollments.class_id
+       WHERE enrollments.id = ? AND classes.teacher_id = ?`
+    )
+    .get(req.params.id, req.session.user.id);
+  if (!enrollment) return res.status(403).send('Forbidden');
+
+  db.prepare(
+    `UPDATE enrollments SET status = 'rejected', decided_by = ?, decided_at = datetime('now') WHERE id = ?`
+  ).run(req.session.user.id, enrollment.id);
+  logAction({ actorId: req.session.user.id, action: 'enrollment.rejected', resourceType: 'enrollment', resourceId: enrollment.id });
+  res.redirect('/teacher');
 });
 
 router.get('/teacher/classes/:id', (req, res) => {
@@ -47,7 +94,7 @@ router.get('/teacher/classes/:id', (req, res) => {
        FROM users
        JOIN enrollments ON enrollments.student_id = users.id
        LEFT JOIN artifacts ON artifacts.student_id = users.id AND artifacts.class_id = ?
-       WHERE enrollments.class_id = ?
+       WHERE enrollments.class_id = ? AND enrollments.status = 'approved'
        GROUP BY users.id
        ORDER BY users.name ASC`
     )

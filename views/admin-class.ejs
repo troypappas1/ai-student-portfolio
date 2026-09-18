@@ -19,8 +19,21 @@
 
     <div class="card">
       <table>
-        <thead><tr><th>Student</th></tr></thead>
-        <tbody><% roster.forEach(function(s) { %><tr><td><%= s.name %></td></tr><% }); %></tbody>
+        <thead><tr><th>Student</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          <% roster.forEach(function(s) { %>
+            <tr>
+              <td><%= s.name %></td>
+              <td><span class="tag <%= s.status %>"><%= s.status %></span></td>
+              <td>
+                <% if (s.status === 'pending') { %>
+                  <form method="POST" action="/admin/enrollments/<%= s.enrollment_id %>/approve" style="display:inline;"><button class="btn small" type="submit">Approve</button></form>
+                  <form method="POST" action="/admin/enrollments/<%= s.enrollment_id %>/reject" style="display:inline;"><button class="btn ghost small" type="submit">Deny</button></form>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
       </table>
       <% if (roster.length === 0) { %><p class="muted">No students enrolled yet.</p><% } %>
     </div>

@@ -13,7 +13,21 @@
   <div class="wrap">
     <p class="school-name">SONOMA ACADEMY</p>
     <h1><%= studentName %></h1>
+    <% if (graduationYear) { %><p class="muted">Class of <%= graduationYear %></p><% } %>
     <p class="tagline">Your work. Your journey. Your story.</p>
+
+    <% if (graph) { %>
+      <h2>The web of connections</h2>
+      <div class="card">
+        <% if (graph.narrative) { %><p><%= graph.narrative %></p><% } %>
+        <p class="muted">Hover or tap a project to see how it connects to the rest of <%= studentName.split(' ')[0] %>'s work.</p>
+        <div id="graph-container" class="graph-container">
+          <div id="graph-tooltip" class="graph-tooltip" hidden></div>
+        </div>
+        <script type="application/json" id="graph-data"><%- JSON.stringify({ nodes: graph.nodes, edges: graph.edges }) %></script>
+        <script src="/graph.js"></script>
+      </div>
+    <% } %>
 
     <% if (allYears.length === 0) { %>
       <p class="muted">Nothing has been shared here yet.</p>

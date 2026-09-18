@@ -7,7 +7,7 @@ const router = express.Router();
 router.get('/p/:token', (req, res) => {
   const link = db
     .prepare(
-      `SELECT portfolio_permissions.*, users.name AS student_name
+      `SELECT portfolio_permissions.*, users.name AS student_name, users.graduation_year AS graduation_year
        FROM portfolio_permissions
        JOIN users ON users.id = portfolio_permissions.student_id
        WHERE token = ?`
@@ -39,6 +39,9 @@ router.get('/p/:token', (req, res) => {
   for (const a of artifacts) (byYear[a.academic_year] ||= []).push(a);
   const allYears = Array.from(new Set([...Object.keys(byYear), ...years.map((y) => y.academic_year)])).sort().reverse();
 
+  const graphRow = db.prepare('SELECT * FROM portfolio_graphs WHERE student_id = ?').get(link.student_id);
+  const graph = graphRow ? JSON.parse(graphRow.data) : null;
+
   logAction({
     actorId: null,
     action: 'share_link.viewed',
@@ -47,7 +50,14 @@ router.get('/p/:token', (req, res) => {
     metadata: { ip: req.ip },
   });
 
-  res.render('public-portfolio', { studentName: link.student_name, byYear, allYears, yearMeta });
+  res.render('public-portfolio', {
+    studentName: link.student_name,
+    graduationYear: link.graduation_year,
+    byYear,
+    allYears,
+    yearMeta,
+    graph,
+  });
 });
 
 module.exports = router;

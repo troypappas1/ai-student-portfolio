@@ -24,14 +24,15 @@
     <h2>Classes</h2>
     <div class="card">
       <table>
-        <thead><tr><th>Name</th><th>Year</th><th>Teacher</th><th>Students</th><th></th></tr></thead>
+        <thead><tr><th>Name</th><th>Year</th><th>Teacher</th><th>Students</th><th>Waiting</th><th></th></tr></thead>
         <tbody>
           <% classes.forEach(function(c) { %>
             <tr>
               <td><%= c.name %> <span class="muted"><%= c.course_code || '' %></span></td>
               <td><%= c.academic_year %></td>
               <td><%= c.teacher_name || '(unassigned)' %></td>
-              <td><%= c.student_count %></td>
+              <td><%= c.student_count || 0 %></td>
+              <td><%= c.pending_count || 0 %></td>
               <td><a href="/admin/classes/<%= c.id %>">Roster &rarr;</a></td>
             </tr>
           <% }); %>

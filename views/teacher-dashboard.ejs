@@ -15,7 +15,32 @@
   </div>
 
   <div class="wrap">
-    <h2>Review queue <span class="muted">(<%= pending.length %> pending)</span></h2>
+    <h2>Class requests <span class="muted">(<%= pendingEnrollments.length %> waiting)</span></h2>
+    <% if (pendingEnrollments.length === 0) { %>
+      <p class="muted">No students waiting to join one of your classes.</p>
+    <% } %>
+    <% if (pendingEnrollments.length > 0) { %>
+      <div class="card">
+        <table>
+          <thead><tr><th>Student</th><th>Class</th><th>Requested</th><th></th></tr></thead>
+          <tbody>
+            <% pendingEnrollments.forEach(function(e) { %>
+              <tr>
+                <td><%= e.student_name %></td>
+                <td><%= e.class_name %></td>
+                <td class="muted"><%= e.requested_at %></td>
+                <td class="row">
+                  <form method="POST" action="/teacher/enrollments/<%= e.id %>/approve"><button class="btn small" type="submit">Approve</button></form>
+                  <form method="POST" action="/teacher/enrollments/<%= e.id %>/reject"><button class="btn ghost small" type="submit">Deny</button></form>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+
+    <h2>Artifacts to review <span class="muted">(<%= pending.length %> pending)</span></h2>
     <% if (pending.length === 0) { %><p class="muted">Nothing waiting on you right now.</p><% } %>
     <% pending.forEach(function(a) { %>
       <div class="card">
@@ -23,12 +48,14 @@
           <strong><%= a.title %></strong>
           <span class="muted"><%= a.student_name %> · <%= a.class_name %> · <%= a.academic_year %></span>
         </div>
-        <p class="muted" style="margin: 4px 0 10px;">
-          <% if (a.project_link) { %><a href="<%= a.project_link %>" target="_blank" rel="noopener">view work</a><% } %>
-        </p>
-        <p class="muted"><strong>Student's own words:</strong> <%= a.raw_description %></p>
+        <% if (a.artifact_type) { %><p class="muted" style="margin:2px 0 10px;"><%= a.artifact_type %></p><% } %>
+        <% if (a.project_link) { %><p style="margin:0 0 10px;"><a href="<%= a.project_link %>" target="_blank" rel="noopener">View the student's work &rarr;</a></p><% } %>
+        <p class="muted" style="margin-bottom:14px;"><strong>In the student's own words:</strong><br><%= a.raw_description %></p>
         <form method="POST" action="/teacher/artifacts/<%= a.id %>/approve">
-          <label for="summary-<%= a.id %>">Summary (AI-drafted below — edit to make it the official, teacher-approved version)</label>
+          <label for="summary-<%= a.id %>">
+            Portfolio summary
+            <span class="badge"><%= a.ai_generated ? 'AI draft — edit before approving' : 'No AI draft — write one below' %></span>
+          </label>
           <textarea id="summary-<%= a.id %>" name="teacher_summary" rows="3"><%= a.ai_summary %></textarea>
           <div class="row" style="margin-top:10px;">
             <button class="btn" type="submit">Approve</button>
@@ -41,13 +68,14 @@
     <h2>Your classes</h2>
     <div class="card">
       <table>
-        <thead><tr><th>Class</th><th>Year</th><th>Students</th><th></th></tr></thead>
+        <thead><tr><th>Class</th><th>Year</th><th>Students</th><th>Waiting</th><th></th></tr></thead>
         <tbody>
           <% classes.forEach(function(c) { %>
             <tr>
               <td><%= c.name %></td>
               <td><%= c.academic_year %></td>
-              <td><%= c.student_count %></td>
+              <td><%= c.student_count || 0 %></td>
+              <td><%= c.pending_count || 0 %></td>
               <td><a href="/teacher/classes/<%= c.id %>">View roster &rarr;</a></td>
             </tr>
           <% }); %>

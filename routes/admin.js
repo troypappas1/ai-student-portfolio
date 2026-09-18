@@ -41,6 +41,7 @@ router.get('/admin', (req, res) => {
     students,
     teachers,
     newPerson: req.session.newPerson || null,
+    aiKeyConfigured: Boolean(process.env.ANTHROPIC_API_KEY),
   });
   delete req.session.newPerson;
 });
@@ -84,12 +85,13 @@ router.post('/admin/people', (req, res) => {
   const name = (req.body.name || '').trim();
   const role = req.body.role === 'teacher' ? 'teacher' : 'student';
   const email = (req.body.school_email || '').trim() || null;
+  const graduationYear = role === 'student' ? parseInt(req.body.graduation_year, 10) || null : null;
   if (!name) return res.status(400).send('Name is required.');
 
   const pin = generatePin();
   const info = db
-    .prepare(`INSERT INTO users (name, role, pin_hash, school_email) VALUES (?, ?, ?, ?)`)
-    .run(name, role, hashPin(pin), email);
+    .prepare(`INSERT INTO users (name, role, pin_hash, school_email, graduation_year) VALUES (?, ?, ?, ?, ?)`)
+    .run(name, role, hashPin(pin), email, graduationYear);
 
   logAction({ actorId: req.session.user.id, action: 'user.created', resourceType: 'user', resourceId: info.lastInsertRowid, metadata: { role } });
   req.session.newPerson = { name, role, pin };
@@ -101,7 +103,9 @@ router.post('/admin/people', (req, res) => {
 router.get('/admin/classes', (req, res) => {
   const classes = db
     .prepare(
-      `SELECT classes.*, users.name AS teacher_name, COUNT(enrollments.id) AS student_count
+      `SELECT classes.*, users.name AS teacher_name,
+              SUM(CASE WHEN enrollments.status = 'approved' THEN 1 ELSE 0 END) AS student_count,
+              SUM(CASE WHEN enrollments.status = 'pending' THEN 1 ELSE 0 END) AS pending_count
        FROM classes
        LEFT JOIN users ON users.id = classes.teacher_id
        LEFT JOIN enrollments ON enrollments.class_id = classes.id
@@ -128,9 +132,9 @@ router.get('/admin/classes/:id', (req, res) => {
   if (!cls) return res.status(404).send('Class not found.');
   const roster = db
     .prepare(
-      `SELECT users.id, users.name FROM users
+      `SELECT users.id, users.name, enrollments.id AS enrollment_id, enrollments.status FROM users
        JOIN enrollments ON enrollments.student_id = users.id
-       WHERE enrollments.class_id = ? ORDER BY users.name ASC`
+       WHERE enrollments.class_id = ? ORDER BY enrollments.status ASC, users.name ASC`
     )
     .all(cls.id);
   const available = db
@@ -146,9 +150,28 @@ router.get('/admin/classes/:id', (req, res) => {
 router.post('/admin/classes/:id/enroll', (req, res) => {
   const studentId = parseInt(req.body.student_id, 10);
   if (!studentId) return res.status(400).send('Student is required.');
-  db.prepare(`INSERT OR IGNORE INTO enrollments (student_id, class_id) VALUES (?, ?)`).run(studentId, req.params.id);
+  db.prepare(
+    `INSERT INTO enrollments (student_id, class_id, status, decided_by, decided_at) VALUES (?, ?, 'approved', ?, datetime('now'))
+     ON CONFLICT(student_id, class_id) DO UPDATE SET status = 'approved', decided_by = excluded.decided_by, decided_at = excluded.decided_at`
+  ).run(studentId, req.params.id, req.session.user.id);
   logAction({ actorId: req.session.user.id, action: 'enrollment.created', resourceType: 'class', resourceId: Number(req.params.id), metadata: { studentId } });
   res.redirect(`/admin/classes/${req.params.id}`);
+});
+
+router.post('/admin/enrollments/:id/approve', (req, res) => {
+  db.prepare(
+    `UPDATE enrollments SET status = 'approved', decided_by = ?, decided_at = datetime('now') WHERE id = ?`
+  ).run(req.session.user.id, req.params.id);
+  logAction({ actorId: req.session.user.id, action: 'enrollment.approved', resourceType: 'enrollment', resourceId: Number(req.params.id) });
+  res.redirect('back');
+});
+
+router.post('/admin/enrollments/:id/reject', (req, res) => {
+  db.prepare(
+    `UPDATE enrollments SET status = 'rejected', decided_by = ?, decided_at = datetime('now') WHERE id = ?`
+  ).run(req.session.user.id, req.params.id);
+  logAction({ actorId: req.session.user.id, action: 'enrollment.rejected', resourceType: 'enrollment', resourceId: Number(req.params.id) });
+  res.redirect('back');
 });
 
 // --- Activities ---

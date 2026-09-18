@@ -16,6 +16,7 @@ conn.exec(`
     role TEXT NOT NULL CHECK (role IN ('student', 'teacher', 'admin')),
     pin_hash TEXT NOT NULL UNIQUE,
     school_email TEXT,
+    graduation_year INTEGER,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
@@ -32,6 +33,10 @@ conn.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     student_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     class_id INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+    requested_at TEXT NOT NULL DEFAULT (datetime('now')),
+    decided_by INTEGER REFERENCES users(id),
+    decided_at TEXT,
     UNIQUE (student_id, class_id)
   );
 
@@ -71,6 +76,7 @@ conn.exec(`
     project_link TEXT,
     raw_description TEXT NOT NULL,
     ai_summary TEXT,
+    ai_generated INTEGER NOT NULL DEFAULT 0,
     teacher_summary TEXT,
     status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
     approved_by INTEGER REFERENCES users(id),
@@ -89,6 +95,14 @@ conn.exec(`
     revoked_at TEXT
   );
 
+  CREATE TABLE IF NOT EXISTS portfolio_graphs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+    generated_by INTEGER REFERENCES users(id),
+    generated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    data TEXT NOT NULL
+  );
+
   CREATE TABLE IF NOT EXISTS audit_logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     actor_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
@@ -104,6 +118,7 @@ conn.exec(`
   CREATE INDEX IF NOT EXISTS idx_artifacts_class ON artifacts(class_id);
   CREATE INDEX IF NOT EXISTS idx_enrollments_student ON enrollments(student_id);
   CREATE INDEX IF NOT EXISTS idx_enrollments_class ON enrollments(class_id);
+  CREATE INDEX IF NOT EXISTS idx_enrollments_status ON enrollments(status);
   CREATE INDEX IF NOT EXISTS idx_activity_members_student ON activity_members(student_id);
   CREATE INDEX IF NOT EXISTS idx_permissions_token ON portfolio_permissions(token);
   CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON audit_logs(created_at);

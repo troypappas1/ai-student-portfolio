@@ -151,15 +151,51 @@ label { font-weight: 500; font-size: 0.88rem; display: block; margin: 12px 0 4px
 .badge { font-size: 0.7rem; padding: 1px 7px; border-radius: 10px; background: #eee; color: #555; }
 
 .tabs { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
-.tabs a {
+.tabs a, .tabs button.tab-btn {
   text-decoration: none;
   padding: 6px 14px;
   border-radius: 20px;
   border: 1px solid var(--moss);
   color: var(--moss);
   font-size: 0.9rem;
+  background: transparent;
+  font-family: 'IBM Plex Sans', sans-serif;
+  cursor: pointer;
 }
-.tabs a.active { background: var(--moss); color: #fff; }
+.tabs a.active, .tabs button.tab-btn.active { background: var(--moss); color: #fff; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+.banner {
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin-bottom: 18px;
+  font-size: 0.9rem;
+}
+.banner.info { background: #eaf0f7; border: 1px solid #4a6b8a; color: #2c4258; }
+.banner.warn { background: #f8f0dd; border: 1px solid #8a5a12; color: #6b4409; }
+.banner.ok { background: #eef5e8; border: 1px solid var(--moss); color: var(--moss); }
+
+.graph-container { position: relative; width: 100%; }
+.graph-edge { stroke: var(--line); stroke-width: 1.5; transition: stroke 0.15s, stroke-width 0.15s; }
+.graph-edge-active { stroke: var(--clay); stroke-width: 2.5; }
+.graph-node circle { cursor: pointer; stroke: var(--card); stroke-width: 2; transition: r 0.15s; }
+.graph-node:hover circle, .graph-node:focus circle { r: 18; outline: none; }
+.graph-node:focus circle { stroke: var(--clay); }
+.graph-label { font-size: 11px; fill: var(--ink); font-family: 'IBM Plex Sans', sans-serif; pointer-events: none; }
+.graph-tooltip {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  max-width: 260px;
+  background: var(--card);
+  border: 1px solid var(--moss);
+  border-radius: 6px;
+  padding: 12px 14px;
+  font-size: 0.85rem;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+}
+.graph-tooltip p { margin: 6px 0 0; }
 
 table { width: 100%; border-collapse: collapse; }
 th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); font-size: 0.92rem; }

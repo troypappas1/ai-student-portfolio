@@ -35,7 +35,7 @@ router.post('/login', loginLimiter, (req, res) => {
 
   req.session.regenerate((err) => {
     if (err) return res.render('login', { error: 'Something went wrong. Try again.' });
-    req.session.user = { id: user.id, name: user.name, role: user.role };
+    req.session.user = { id: user.id, name: user.name, role: user.role, graduationYear: user.graduation_year };
     res.redirect(homeFor(user.role));
   });
 });

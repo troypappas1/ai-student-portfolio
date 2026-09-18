@@ -9,7 +9,7 @@
   <div class="topbar">
     <div class="brand">Capture</div>
     <div class="row">
-      <span class="who"><%= user.name %> · student</span>
+      <span class="who"><%= user.name %><% if (user.graduationYear) { %> · Class of <%= user.graduationYear %><% } %></span>
       <form method="POST" action="/logout"><button class="btn ghost small" type="submit">Sign out</button></form>
     </div>
   </div>
@@ -17,138 +17,299 @@
   <div class="wrap">
     <% if (justCreatedLink) { %>
       <div class="pin-callout">
-        Share link created. Copy it now — it won't be shown again on this screen (you can revoke it any time below):
+        Share link created. Copy it now — it won't be shown again on this screen (you can revoke it any time in the Portfolio tab):
         <div class="share-link-box" style="margin-top:8px;">/p/<%= justCreatedLink %></div>
       </div>
     <% } %>
+    <% if (connectionsError) { %>
+      <div class="banner warn"><%= connectionsError %></div>
+    <% } %>
 
-    <h2>Add an artifact</h2>
-    <div class="card">
-      <form method="POST" action="/student/artifacts" id="artifact-form">
-        <label>This artifact is for</label>
-        <div class="row">
-          <label style="font-weight:400;"><input type="radio" name="context_type" value="class" checked style="width:auto;"> A class</label>
-          <label style="font-weight:400;"><input type="radio" name="context_type" value="activity" style="width:auto;"> A team/club</label>
-          <label style="font-weight:400;"><input type="radio" name="context_type" value="personal" style="width:auto;"> A personal project</label>
-        </div>
-
-        <div id="ctx-class" class="ctx-block">
-          <label for="class_id">Class</label>
-          <select id="class_id" name="class_id">
-            <% classes.forEach(function(c) { %>
-              <option value="<%= c.id %>"><%= c.name %> (<%= c.academic_year %>)</option>
-            <% }); %>
-          </select>
-          <% if (classes.length === 0) { %><p class="muted">You're not enrolled in any classes yet — ask your admin/teacher to add you.</p><% } %>
-        </div>
-
-        <div id="ctx-activity" class="ctx-block" style="display:none;">
-          <label for="activity_id">Team / club</label>
-          <select id="activity_id" name="activity_id">
-            <% activities.forEach(function(a) { %>
-              <option value="<%= a.id %>"><%= a.name %> (<%= a.academic_year %>)</option>
-            <% }); %>
-          </select>
-          <% if (activities.length === 0) { %><p class="muted">You're not a member of any teams/clubs yet.</p><% } %>
-        </div>
-
-        <div id="ctx-personal" class="ctx-block" style="display:none;">
-          <label for="academic_year">Academic year</label>
-          <input id="academic_year" name="academic_year" placeholder="<%= currentYear %>" value="<%= currentYear %>">
-        </div>
-
-        <div class="grid-2">
-          <div>
-            <label for="title">Title</label>
-            <input id="title" name="title" required placeholder="e.g. Autonomous line-follower robot">
-          </div>
-          <div>
-            <label for="artifact_type">Type</label>
-            <input id="artifact_type" name="artifact_type" placeholder="e.g. Video, PDF, Writing, Presentation">
-          </div>
-        </div>
-        <label for="project_link">Link to your work (optional)</label>
-        <input id="project_link" name="project_link" type="url" placeholder="https://drive.google.com/...">
-
-        <label for="raw_description">Describe what you made and why it mattered to you</label>
-        <textarea id="raw_description" name="raw_description" rows="4" required
-          placeholder="Tell us what this was, what you did, and what you're proud of. An AI draft summary will be generated from this and reviewed by your teacher before it goes on your portfolio."></textarea>
-        <div style="margin-top:14px;">
-          <button class="btn clay" type="submit">Submit for review</button>
-        </div>
-      </form>
+    <div class="tabs" role="tablist">
+      <button type="button" class="tab-btn active" data-tab="portfolio">My Portfolio</button>
+      <% classes.forEach(function(c) { %>
+        <button type="button" class="tab-btn" data-tab="class-<%= c.id %>"><%= c.name %></button>
+      <% }); %>
+      <% activities.forEach(function(a) { %>
+        <button type="button" class="tab-btn" data-tab="activity-<%= a.id %>"><%= a.name %></button>
+      <% }); %>
+      <button type="button" class="tab-btn" data-tab="personal">Personal Projects</button>
+      <button type="button" class="tab-btn" data-tab="join">Join a Class</button>
     </div>
 
-    <h2>Share your portfolio</h2>
-    <div class="card">
-      <p class="muted">Portfolios are private by default. Create a link to share your approved work with a college, a recommender, or family — you can revoke it any time.</p>
-      <form method="POST" action="/student/share" class="row">
-        <input name="label" placeholder="Label (e.g. College applications)" style="max-width:260px;">
-        <select name="expires_in_days" style="max-width:180px;">
-          <option value="">Never expires</option>
-          <option value="7">Expires in 7 days</option>
-          <option value="30">Expires in 30 days</option>
-          <option value="90">Expires in 90 days</option>
-        </select>
-        <button class="btn" type="submit">Create link</button>
-      </form>
-      <% if (shareLinks.length > 0) { %>
-        <table style="margin-top:14px;">
-          <thead><tr><th>Label</th><th>Expires</th><th></th></tr></thead>
+    <!-- ===== Portfolio tab: the year-by-year story, sharing, connections map ===== -->
+    <div class="tab-panel active" id="tab-portfolio">
+      <h2>Your journey</h2>
+      <% if (allYears.length === 0) { %>
+        <p class="muted">Nothing submitted yet — pick a class tab above to add your first artifact.</p>
+      <% } %>
+      <% allYears.forEach(function(year) { %>
+        <div class="year-header">
+          <div class="year-range"><%= year %></div>
+          <h3><%= (yearMeta[year] && yearMeta[year].title) || year %></h3>
+          <% if (yearMeta[year] && yearMeta[year].description) { %><p class="muted"><%= yearMeta[year].description %></p><% } %>
+        </div>
+        <% (byYear[year] || []).forEach(function(a) { %>
+          <div class="card">
+            <div class="row" style="justify-content: space-between;">
+              <strong><%= a.title %></strong>
+              <span class="tag <%= a.status %>"><%= a.status %></span>
+            </div>
+            <p class="muted" style="margin: 4px 0 10px;">
+              <%= a.class_name || a.activity_name || 'Personal project' %>
+              <% if (a.artifact_type) { %> · <%= a.artifact_type %><% } %>
+              <% if (a.project_link) { %> · <a href="<%= a.project_link %>" target="_blank" rel="noopener">view work</a><% } %>
+            </p>
+            <% if (a.status === 'approved' && a.teacher_summary) { %>
+              <p><%= a.teacher_summary %></p>
+            <% } else { %>
+              <p class="muted"><span class="badge"><%= a.ai_generated ? 'AI draft' : 'Draft (no AI key)' %></span> <%= a.ai_summary %></p>
+              <% if (a.status === 'pending') { %><p class="muted">Waiting on a teacher to review this.</p><% } %>
+            <% } %>
+          </div>
+        <% }); %>
+      <% }); %>
+
+      <h2>The web of connections</h2>
+      <div class="card">
+        <p class="muted">
+          Once you have at least two approved artifacts, generate an AI map that finds real connections
+          between your work across years — recurring interests, skills that show up more than once, growth
+          from one project to the next. <strong>This costs AI credits every time you generate it</strong>, so
+          only do it when your portfolio has meaningfully changed, not after every single artifact.
+        </p>
+        <% if (!aiKeyConfigured) { %>
+          <div class="banner info">AI features aren't turned on yet. Ask your site administrator to configure an AI key — see the README.</div>
+        <% } else if (approvedCount < 2) { %>
+          <div class="banner info">You need at least 2 approved artifacts before a connections map is worth generating (you have <%= approvedCount %>).</div>
+        <% } else { %>
+          <form method="POST" action="/student/connections/generate">
+            <button class="btn clay" type="submit"><%= graph ? 'Regenerate connections map' : 'Generate connections map' %></button>
+          </form>
+        <% } %>
+
+        <% if (graph) { %>
+          <p class="muted" style="margin-top:14px;">Last generated <%= graph.generatedAt %> UTC. Hover or tap a project to see how it connects.</p>
+          <% if (graph.narrative) { %><p><%= graph.narrative %></p><% } %>
+          <div id="graph-container" class="graph-container">
+            <div id="graph-tooltip" class="graph-tooltip" hidden></div>
+          </div>
+          <script type="application/json" id="graph-data"><%- JSON.stringify({ nodes: graph.nodes, edges: graph.edges }) %></script>
+          <script src="/graph.js"></script>
+        <% } %>
+      </div>
+
+      <h2>Share your portfolio</h2>
+      <div class="card">
+        <p class="muted">Portfolios are private by default. Create a link to share your approved work with a college, a recommender, or family — you can revoke it any time.</p>
+        <form method="POST" action="/student/share" class="row">
+          <input name="label" placeholder="Label (e.g. College applications)" style="max-width:260px;">
+          <select name="expires_in_days" style="max-width:180px;">
+            <option value="">Never expires</option>
+            <option value="7">Expires in 7 days</option>
+            <option value="30">Expires in 30 days</option>
+            <option value="90">Expires in 90 days</option>
+          </select>
+          <button class="btn" type="submit">Create link</button>
+        </form>
+        <% if (shareLinks.length > 0) { %>
+          <table style="margin-top:14px;">
+            <thead><tr><th>Label</th><th>Expires</th><th></th></tr></thead>
+            <tbody>
+              <% shareLinks.forEach(function(l) { %>
+                <tr>
+                  <td><%= l.label || '(untitled)' %> <br><span class="muted">/p/<%= l.token %></span></td>
+                  <td><%= l.expires_at ? l.expires_at : 'Never' %></td>
+                  <td>
+                    <form method="POST" action="/student/share/<%= l.id %>/revoke">
+                      <button class="btn ghost small" type="submit">Revoke</button>
+                    </form>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- ===== One tab per approved class ===== -->
+    <% classes.forEach(function(c) { %>
+      <div class="tab-panel" id="tab-class-<%= c.id %>">
+        <h2><%= c.name %> <span class="muted">(<%= c.academic_year %><% if (c.teacher_name) { %> · <%= c.teacher_name %><% } %>)</span></h2>
+
+        <div class="card">
+          <form method="POST" action="/student/artifacts">
+            <input type="hidden" name="context_type" value="class">
+            <input type="hidden" name="class_id" value="<%= c.id %>">
+            <div class="grid-2">
+              <div>
+                <label for="title-c<%= c.id %>">Title</label>
+                <input id="title-c<%= c.id %>" name="title" required placeholder="e.g. Rocket Lab Data Analysis">
+              </div>
+              <div>
+                <label for="type-c<%= c.id %>">Type</label>
+                <input id="type-c<%= c.id %>" name="artifact_type" placeholder="e.g. Video, PDF, Writing">
+              </div>
+            </div>
+            <label for="link-c<%= c.id %>">Link to your work (optional)</label>
+            <input id="link-c<%= c.id %>" name="project_link" type="url" placeholder="https://drive.google.com/...">
+            <label for="desc-c<%= c.id %>">Describe what you made and why it mattered to you</label>
+            <textarea id="desc-c<%= c.id %>" name="raw_description" rows="4" required
+              placeholder="An AI draft summary will be generated from this and reviewed by your teacher before it goes on your portfolio."></textarea>
+            <div style="margin-top:14px;"><button class="btn clay" type="submit">Submit for review</button></div>
+          </form>
+        </div>
+
+        <% (byClass[c.id] || []).forEach(function(a) { %>
+          <div class="card">
+            <div class="row" style="justify-content: space-between;">
+              <strong><%= a.title %></strong>
+              <span class="tag <%= a.status %>"><%= a.status %></span>
+            </div>
+            <p class="muted" style="margin: 4px 0 10px;"><%= a.academic_year %><% if (a.artifact_type) { %> · <%= a.artifact_type %><% } %></p>
+            <% if (a.status === 'approved' && a.teacher_summary) { %>
+              <p><%= a.teacher_summary %></p>
+            <% } else { %>
+              <p class="muted"><span class="badge"><%= a.ai_generated ? 'AI draft' : 'Draft (no AI key)' %></span> <%= a.ai_summary %></p>
+            <% } %>
+          </div>
+        <% }); %>
+        <% if (!byClass[c.id] || byClass[c.id].length === 0) { %><p class="muted">Nothing submitted for this class yet.</p><% } %>
+      </div>
+    <% }); %>
+
+    <!-- ===== One tab per activity ===== -->
+    <% activities.forEach(function(act) { %>
+      <div class="tab-panel" id="tab-activity-<%= act.id %>">
+        <h2><%= act.name %> <span class="muted">(<%= act.academic_year %>)</span></h2>
+
+        <div class="card">
+          <form method="POST" action="/student/artifacts">
+            <input type="hidden" name="context_type" value="activity">
+            <input type="hidden" name="activity_id" value="<%= act.id %>">
+            <div class="grid-2">
+              <div>
+                <label for="title-a<%= act.id %>">Title</label>
+                <input id="title-a<%= act.id %>" name="title" required>
+              </div>
+              <div>
+                <label for="type-a<%= act.id %>">Type</label>
+                <input id="type-a<%= act.id %>" name="artifact_type" placeholder="e.g. Video, PDF, Photo">
+              </div>
+            </div>
+            <label for="link-a<%= act.id %>">Link to your work (optional)</label>
+            <input id="link-a<%= act.id %>" name="project_link" type="url">
+            <label for="desc-a<%= act.id %>">Describe what you made and why it mattered to you</label>
+            <textarea id="desc-a<%= act.id %>" name="raw_description" rows="4" required></textarea>
+            <div style="margin-top:14px;"><button class="btn clay" type="submit">Submit for review</button></div>
+          </form>
+        </div>
+
+        <% (byActivity[act.id] || []).forEach(function(a) { %>
+          <div class="card">
+            <div class="row" style="justify-content: space-between;">
+              <strong><%= a.title %></strong>
+              <span class="tag <%= a.status %>"><%= a.status %></span>
+            </div>
+            <p class="muted" style="margin: 4px 0 10px;"><%= a.academic_year %></p>
+            <% if (a.status === 'approved' && a.teacher_summary) { %><p><%= a.teacher_summary %></p>
+            <% } else { %><p class="muted"><span class="badge"><%= a.ai_generated ? 'AI draft' : 'Draft (no AI key)' %></span> <%= a.ai_summary %></p><% } %>
+          </div>
+        <% }); %>
+        <% if (!byActivity[act.id] || byActivity[act.id].length === 0) { %><p class="muted">Nothing submitted here yet.</p><% } %>
+      </div>
+    <% }); %>
+
+    <!-- ===== Personal projects tab ===== -->
+    <div class="tab-panel" id="tab-personal">
+      <h2>Personal projects</h2>
+      <div class="card">
+        <form method="POST" action="/student/artifacts">
+          <input type="hidden" name="context_type" value="personal">
+          <label for="year-p">Academic year</label>
+          <input id="year-p" name="academic_year" value="<%= currentYear %>" required>
+          <div class="grid-2">
+            <div><label for="title-p">Title</label><input id="title-p" name="title" required></div>
+            <div><label for="type-p">Type</label><input id="type-p" name="artifact_type"></div>
+          </div>
+          <label for="link-p">Link to your work (optional)</label>
+          <input id="link-p" name="project_link" type="url">
+          <label for="desc-p">Describe what you made and why it mattered to you</label>
+          <textarea id="desc-p" name="raw_description" rows="4" required></textarea>
+          <div style="margin-top:14px;"><button class="btn clay" type="submit">Submit for review</button></div>
+        </form>
+      </div>
+      <% personal.forEach(function(a) { %>
+        <div class="card">
+          <div class="row" style="justify-content: space-between;">
+            <strong><%= a.title %></strong>
+            <span class="tag <%= a.status %>"><%= a.status %></span>
+          </div>
+          <p class="muted" style="margin: 4px 0 10px;"><%= a.academic_year %></p>
+          <% if (a.status === 'approved' && a.teacher_summary) { %><p><%= a.teacher_summary %></p>
+          <% } else { %><p class="muted"><span class="badge"><%= a.ai_generated ? 'AI draft' : 'Draft (no AI key)' %></span> <%= a.ai_summary %></p><% } %>
+        </div>
+      <% }); %>
+      <% if (personal.length === 0) { %><p class="muted">No personal projects yet.</p><% } %>
+    </div>
+
+    <!-- ===== Join a class tab ===== -->
+    <div class="tab-panel" id="tab-join">
+      <h2>Join a class</h2>
+      <p class="muted">Request to join a class — your teacher approves it before it shows up as one of your classes.</p>
+
+      <% if (pendingClasses.length > 0) { %>
+        <h3>Your requests</h3>
+        <div class="card">
+          <table>
+            <thead><tr><th>Class</th><th>Teacher</th><th>Status</th></tr></thead>
+            <tbody>
+              <% pendingClasses.forEach(function(c) { %>
+                <tr>
+                  <td><%= c.name %> <span class="muted"><%= c.academic_year %></span></td>
+                  <td><%= c.teacher_name || '—' %></td>
+                  <td><span class="tag <%= c.status %>"><%= c.status %></span></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+
+      <h3>Available classes</h3>
+      <div class="card">
+        <table>
+          <thead><tr><th>Class</th><th>Teacher</th><th>Year</th><th></th></tr></thead>
           <tbody>
-            <% shareLinks.forEach(function(l) { %>
+            <% browsableClasses.forEach(function(c) { %>
               <tr>
-                <td><%= l.label || '(untitled)' %> <br><span class="muted">/p/<%= l.token %></span></td>
-                <td><%= l.expires_at ? l.expires_at : 'Never' %></td>
+                <td><%= c.name %> <span class="muted"><%= c.course_code || '' %></span></td>
+                <td><%= c.teacher_name || '(unassigned)' %></td>
+                <td><%= c.academic_year %></td>
                 <td>
-                  <form method="POST" action="/student/share/<%= l.id %>/revoke">
-                    <button class="btn ghost small" type="submit">Revoke</button>
+                  <form method="POST" action="/student/classes/<%= c.id %>/request">
+                    <button class="btn small" type="submit">Request to join</button>
                   </form>
                 </td>
               </tr>
             <% }); %>
           </tbody>
         </table>
-      <% } %>
-    </div>
-
-    <h2>Your portfolio</h2>
-    <% if (allYears.length === 0) { %>
-      <p class="muted">Nothing submitted yet — add your first artifact above.</p>
-    <% } %>
-    <% allYears.forEach(function(year) { %>
-      <div class="year-header">
-        <div class="year-range"><%= year %></div>
-        <h3><%= (yearMeta[year] && yearMeta[year].title) || year %></h3>
-        <% if (yearMeta[year] && yearMeta[year].description) { %><p class="muted"><%= yearMeta[year].description %></p><% } %>
+        <% if (browsableClasses.length === 0) { %><p class="muted">Nothing left to request — you're in (or waiting on) every class.</p><% } %>
       </div>
-      <% (byYear[year] || []).forEach(function(a) { %>
-        <div class="card">
-          <div class="row" style="justify-content: space-between;">
-            <strong><%= a.title %></strong>
-            <span class="tag <%= a.status %>"><%= a.status %></span>
-          </div>
-          <p class="muted" style="margin: 4px 0 10px;">
-            <%= a.class_name || a.activity_name || 'Personal project' %>
-            <% if (a.artifact_type) { %> · <%= a.artifact_type %><% } %>
-            <% if (a.project_link) { %> · <a href="<%= a.project_link %>" target="_blank" rel="noopener">view work</a><% } %>
-          </p>
-          <% if (a.status === 'approved' && a.teacher_summary) { %>
-            <p><%= a.teacher_summary %></p>
-          <% } else { %>
-            <p class="muted"><span class="badge">AI draft</span> <%= a.ai_summary %></p>
-            <% if (a.status === 'pending') { %><p class="muted">Waiting on a teacher to review this.</p><% } %>
-          <% } %>
-        </div>
-      <% }); %>
-    <% }); %>
+    </div>
   </div>
 
   <script>
-    const radios = document.querySelectorAll('input[name="context_type"]');
-    const blocks = { class: document.getElementById('ctx-class'), activity: document.getElementById('ctx-activity'), personal: document.getElementById('ctx-personal') };
-    radios.forEach(r => r.addEventListener('change', () => {
-      Object.entries(blocks).forEach(([key, el]) => { el.style.display = key === r.value ? 'block' : 'none'; });
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const panels = document.querySelectorAll('.tab-panel');
+    tabButtons.forEach(btn => btn.addEventListener('click', () => {
+      tabButtons.forEach(b => b.classList.remove('active'));
+      panels.forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      const panel = document.getElementById('tab-' + btn.dataset.tab);
+      if (panel) panel.classList.add('active');
     }));
   </script>
 </body>

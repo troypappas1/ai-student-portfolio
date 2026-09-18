@@ -29,7 +29,17 @@
       </div>
     <% } %>
 
-    <h2>Review queue <span class="muted">(<%= pending.length %> pending)</span></h2>
+    <% if (aiKeyConfigured) { %>
+      <div class="banner ok">AI summaries and connections maps are turned on.</div>
+    <% } else { %>
+      <div class="banner warn">
+        No AI key configured — artifact summaries fall back to a plain placeholder, and connections
+        maps are disabled. Set <code>ANTHROPIC_API_KEY</code> (locally in <code>.env</code>, or on the
+        server with <code>fly secrets set ANTHROPIC_API_KEY=...</code>) and restart the app.
+      </div>
+    <% } %>
+
+    <h2>Artifacts to review <span class="muted">(<%= pending.length %> pending)</span></h2>
     <% if (pending.length === 0) { %>
       <p class="muted">Nothing waiting on review.</p>
     <% } %>
@@ -39,13 +49,16 @@
           <strong><%= a.title %></strong>
           <span class="muted"><%= a.student_name %> · <%= a.academic_year %></span>
         </div>
-        <p class="muted" style="margin: 4px 0 10px;">
-          <%= a.class_name || a.activity_name || 'Personal project' %>
-          <% if (a.project_link) { %> · <a href="<%= a.project_link %>" target="_blank" rel="noopener">view work</a><% } %>
+        <p class="muted" style="margin:2px 0 10px;">
+          <%= a.class_name || a.activity_name || 'Personal project' %><% if (a.artifact_type) { %> · <%= a.artifact_type %><% } %>
         </p>
-        <p class="muted"><strong>Student's own words:</strong> <%= a.raw_description %></p>
+        <% if (a.project_link) { %><p style="margin:0 0 10px;"><a href="<%= a.project_link %>" target="_blank" rel="noopener">View the student's work &rarr;</a></p><% } %>
+        <p class="muted" style="margin-bottom:14px;"><strong>In the student's own words:</strong><br><%= a.raw_description %></p>
         <form method="POST" action="/admin/artifacts/<%= a.id %>/approve">
-          <label for="summary-<%= a.id %>">Summary (AI-drafted below — edit to make it official)</label>
+          <label for="summary-<%= a.id %>">
+            Portfolio summary
+            <span class="badge"><%= a.ai_generated ? 'AI draft — edit before approving' : 'No AI draft — write one below' %></span>
+          </label>
           <textarea id="summary-<%= a.id %>" name="teacher_summary" rows="3"><%= a.ai_summary %></textarea>
           <div class="row" style="margin-top:10px;">
             <button class="btn" type="submit">Approve</button>
@@ -93,11 +106,19 @@
             <input id="school_email" name="school_email" type="email">
           </div>
         </div>
-        <label for="role">Role</label>
-        <select id="role" name="role">
-          <option value="student">Student</option>
-          <option value="teacher">Teacher</option>
-        </select>
+        <div class="grid-2">
+          <div>
+            <label for="role">Role</label>
+            <select id="role" name="role">
+              <option value="student">Student</option>
+              <option value="teacher">Teacher</option>
+            </select>
+          </div>
+          <div>
+            <label for="graduation_year">Graduation year (students only)</label>
+            <input id="graduation_year" name="graduation_year" type="number" placeholder="2028">
+          </div>
+        </div>
         <p class="muted">Additional admin accounts aren't created through this form — add them directly via the seed script for now.</p>
         <div style="margin-top:14px;">
           <button class="btn clay" type="submit">Create person + generate PIN</button>

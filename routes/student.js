@@ -3,6 +3,7 @@ const db = require('../db');
 const { requireRole } = require('../lib/auth');
 const { generateSummary } = require('../lib/summarize');
 const { generateShareToken } = require('../lib/token');
+const { generateConnectionsMap } = require('../lib/connections');
 const { logAction } = require('../lib/audit');
 
 const router = express.Router();
@@ -10,9 +11,29 @@ const router = express.Router();
 function loadDashboardData(studentId) {
   const classes = db
     .prepare(
-      `SELECT classes.* FROM classes
+      `SELECT classes.*, users.name AS teacher_name FROM classes
        JOIN enrollments ON enrollments.class_id = classes.id
-       WHERE enrollments.student_id = ?
+       LEFT JOIN users ON users.id = classes.teacher_id
+       WHERE enrollments.student_id = ? AND enrollments.status = 'approved'
+       ORDER BY academic_year DESC, name ASC`
+    )
+    .all(studentId);
+
+  const pendingClasses = db
+    .prepare(
+      `SELECT classes.*, enrollments.status, users.name AS teacher_name FROM classes
+       JOIN enrollments ON enrollments.class_id = classes.id
+       LEFT JOIN users ON users.id = classes.teacher_id
+       WHERE enrollments.student_id = ? AND enrollments.status != 'approved'
+       ORDER BY enrollments.requested_at DESC`
+    )
+    .all(studentId);
+
+  const browsableClasses = db
+    .prepare(
+      `SELECT classes.*, users.name AS teacher_name FROM classes
+       LEFT JOIN users ON users.id = classes.teacher_id
+       WHERE classes.id NOT IN (SELECT class_id FROM enrollments WHERE student_id = ?)
        ORDER BY academic_year DESC, name ASC`
     )
     .all(studentId);
@@ -44,7 +65,15 @@ function loadDashboardData(studentId) {
   for (const y of years) yearMeta[y.academic_year] = y;
 
   const byYear = {};
-  for (const a of artifacts) (byYear[a.academic_year] ||= []).push(a);
+  const byClass = {};
+  const byActivity = {};
+  const personal = [];
+  for (const a of artifacts) {
+    (byYear[a.academic_year] ||= []).push(a);
+    if (a.class_id) (byClass[a.class_id] ||= []).push(a);
+    else if (a.activity_id) (byActivity[a.activity_id] ||= []).push(a);
+    else personal.push(a);
+  }
   const allYears = Array.from(new Set([...Object.keys(byYear), ...years.map((y) => y.academic_year)])).sort().reverse();
 
   const shareLinks = db
@@ -55,7 +84,26 @@ function loadDashboardData(studentId) {
     )
     .all(studentId);
 
-  return { classes, activities, byYear, allYears, yearMeta, shareLinks };
+  const approvedCount = artifacts.filter((a) => a.status === 'approved').length;
+  const graphRow = db.prepare('SELECT * FROM portfolio_graphs WHERE student_id = ?').get(studentId);
+  const graph = graphRow ? { ...JSON.parse(graphRow.data), generatedAt: graphRow.generated_at } : null;
+
+  return {
+    classes,
+    pendingClasses,
+    browsableClasses,
+    activities,
+    byYear,
+    byClass,
+    byActivity,
+    personal,
+    allYears,
+    yearMeta,
+    shareLinks,
+    approvedCount,
+    graph,
+    aiKeyConfigured: Boolean(process.env.ANTHROPIC_API_KEY),
+  };
 }
 
 router.get('/student', requireRole('student'), (req, res) => {
@@ -65,8 +113,33 @@ router.get('/student', requireRole('student'), (req, res) => {
     ...data,
     currentYear: `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`,
     justCreatedLink: req.session.justCreatedLink || null,
+    connectionsError: req.session.connectionsError || null,
   });
   delete req.session.justCreatedLink;
+  delete req.session.connectionsError;
+});
+
+router.post('/student/classes/:id/request', requireRole('student'), (req, res) => {
+  const cls = db.prepare('SELECT * FROM classes WHERE id = ?').get(req.params.id);
+  if (!cls) return res.status(404).send('Class not found.');
+
+  const existing = db
+    .prepare('SELECT * FROM enrollments WHERE student_id = ? AND class_id = ?')
+    .get(req.session.user.id, cls.id);
+
+  if (!existing) {
+    db.prepare(`INSERT INTO enrollments (student_id, class_id, status) VALUES (?, ?, 'pending')`).run(
+      req.session.user.id,
+      cls.id
+    );
+  } else if (existing.status === 'rejected') {
+    db.prepare(
+      `UPDATE enrollments SET status = 'pending', requested_at = datetime('now'), decided_by = NULL, decided_at = NULL WHERE id = ?`
+    ).run(existing.id);
+  }
+
+  logAction({ actorId: req.session.user.id, action: 'enrollment.requested', resourceType: 'class', resourceId: cls.id });
+  res.redirect('/student');
 });
 
 router.post('/student/artifacts', requireRole('student'), async (req, res) => {
@@ -86,10 +159,10 @@ router.post('/student/artifacts', requireRole('student'), async (req, res) => {
       .prepare(
         `SELECT classes.* FROM classes
          JOIN enrollments ON enrollments.class_id = classes.id
-         WHERE classes.id = ? AND enrollments.student_id = ?`
+         WHERE classes.id = ? AND enrollments.student_id = ? AND enrollments.status = 'approved'`
       )
       .get(class_id, req.session.user.id);
-    if (!cls) return res.status(403).send('You are not enrolled in that class.');
+    if (!cls) return res.status(403).send('You are not an approved member of that class.');
     resolvedClassId = cls.id;
     resolvedYear = cls.academic_year;
     contextName = cls.name;
@@ -109,7 +182,7 @@ router.post('/student/artifacts', requireRole('student'), async (req, res) => {
 
   if (!resolvedYear) return res.status(400).send('Academic year is required.');
 
-  const summary = await generateSummary({
+  const { text: summary, aiGenerated } = await generateSummary({
     studentName: req.session.user.name,
     title,
     classOrTeam: contextName,
@@ -119,8 +192,8 @@ router.post('/student/artifacts', requireRole('student'), async (req, res) => {
 
   const info = db
     .prepare(
-      `INSERT INTO artifacts (student_id, class_id, activity_id, title, artifact_type, academic_year, project_link, raw_description, ai_summary, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`
+      `INSERT INTO artifacts (student_id, class_id, activity_id, title, artifact_type, academic_year, project_link, raw_description, ai_summary, ai_generated, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`
     )
     .run(
       req.session.user.id,
@@ -131,7 +204,8 @@ router.post('/student/artifacts', requireRole('student'), async (req, res) => {
       resolvedYear,
       (project_link || '').trim() || null,
       raw_description.trim(),
-      summary
+      summary,
+      aiGenerated ? 1 : 0
     );
 
   logAction({
@@ -140,6 +214,77 @@ router.post('/student/artifacts', requireRole('student'), async (req, res) => {
     resourceType: 'artifact',
     resourceId: info.lastInsertRowid,
   });
+
+  res.redirect('/student');
+});
+
+router.post('/student/connections/generate', requireRole('student'), async (req, res) => {
+  const studentId = req.session.user.id;
+
+  if (!process.env.ANTHROPIC_API_KEY) {
+    req.session.connectionsError = 'Add an AI key first — see the setup note below.';
+    return res.redirect('/student');
+  }
+
+  const existingGraph = db.prepare('SELECT generated_at FROM portfolio_graphs WHERE student_id = ?').get(studentId);
+  if (existingGraph) {
+    const secondsAgo = (Date.now() - new Date(existingGraph.generated_at + 'Z').getTime()) / 1000;
+    if (secondsAgo < 60) {
+      req.session.connectionsError = 'You just generated a map — wait about a minute before generating again (each one uses AI credits).';
+      return res.redirect('/student');
+    }
+  }
+
+  const rows = db
+    .prepare(
+      `SELECT artifacts.id, artifacts.title, artifacts.academic_year, artifacts.teacher_summary,
+              classes.name AS class_name, activities.name AS activity_name
+       FROM artifacts
+       LEFT JOIN classes ON classes.id = artifacts.class_id
+       LEFT JOIN activities ON activities.id = artifacts.activity_id
+       WHERE artifacts.student_id = ? AND artifacts.status = 'approved'
+       ORDER BY artifacts.academic_year ASC, artifacts.created_at ASC`
+    )
+    .all(studentId);
+
+  if (rows.length < 2) {
+    req.session.connectionsError = 'You need at least two approved artifacts before a connections map is worth generating.';
+    return res.redirect('/student');
+  }
+
+  try {
+    const result = await generateConnectionsMap({
+      studentName: req.session.user.name,
+      artifacts: rows.map((r) => ({
+        id: r.id,
+        academic_year: r.academic_year,
+        context: r.class_name || r.activity_name,
+        summary: r.teacher_summary,
+      })),
+    });
+
+    const graphData = {
+      narrative: result.narrative,
+      nodes: rows.map((r) => ({
+        id: r.id,
+        title: r.title,
+        year: r.academic_year,
+        context: r.class_name || r.activity_name,
+        summary: r.teacher_summary,
+      })),
+      edges: result.edges,
+    };
+
+    db.prepare(
+      `INSERT INTO portfolio_graphs (student_id, generated_by, data) VALUES (?, ?, ?)
+       ON CONFLICT(student_id) DO UPDATE SET generated_by = excluded.generated_by, generated_at = datetime('now'), data = excluded.data`
+    ).run(studentId, studentId, JSON.stringify(graphData));
+
+    logAction({ actorId: studentId, action: 'connections_map.generated', resourceType: 'user', resourceId: studentId });
+  } catch (err) {
+    console.error('Connections map generation failed:', err.message);
+    req.session.connectionsError = 'Generating the map failed — try again in a moment.';
+  }
 
   res.redirect('/student');
 });
