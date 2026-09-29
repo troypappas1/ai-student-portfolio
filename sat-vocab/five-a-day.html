@@ -1,0 +1,1467 @@
+<title>Five a Day</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<style>
+/* Layout: a study desk. Index cards for words, a highlighter for what matters, one top bar with four rooms. */
+:root {
+  --bg: #EDF0F6;
+  --surface: #FFFFFF;
+  --surface-2: #E2E7F1;
+  --ink: #141B2E;
+  --ink-2: #4B5572;
+  --line: #CBD2E2;
+  --accent: #2B48E6;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #DDE3FF;
+  --hi: #FFE45C;
+  --hi-ink: #141B2E;
+  --hi-mark: #FFE45C;
+  --good: #16865A;
+  --good-soft: #D5F2E4;
+  --bad: #CC2F45;
+  --bad-soft: #FADADF;
+  --warn: #B86E00;
+  --rule: #C9D6F0;
+  --margin: #E6788A;
+  --shadow: 0 1px 2px rgba(20,27,46,.06), 0 6px 18px rgba(20,27,46,.07);
+  --f-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --f-ui: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --f-read: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1120; --surface: #161C2E; --surface-2: #1F2740; --ink: #E7EBF6; --ink-2: #9CA6C2; --line: #2A3453;
+    --accent: #8197FF; --accent-ink: #0D1120; --accent-soft: #232D55; --hi: #E9D03E; --hi-ink: #141B2E; --hi-mark: rgba(233,208,62,.38);
+    --good: #3CCB8A; --good-soft: #143528; --bad: #FF6B80; --bad-soft: #3D1820; --warn: #F2A93B;
+    --rule: #26314F; --margin: #A8485A; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1120; --surface: #161C2E; --surface-2: #1F2740; --ink: #E7EBF6; --ink-2: #9CA6C2; --line: #2A3453;
+  --accent: #8197FF; --accent-ink: #0D1120; --accent-soft: #232D55; --hi: #E9D03E; --hi-ink: #141B2E; --hi-mark: rgba(233,208,62,.38);
+  --good: #3CCB8A; --good-soft: #143528; --bad: #FF6B80; --bad-soft: #3D1820; --warn: #F2A93B;
+  --rule: #26314F; --margin: #A8485A; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--bg); color: var(--ink); }
+body { font: 16px/1.5 var(--f-ui); margin: 0; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; line-height: 1.1; }
+
+.wrap { max-width: 1040px; margin: 0 auto; padding-inline: 20px; }
+@media (max-width: 520px) { .wrap { padding-inline: 16px; } }
+
+/* Top bar */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+.top .wrap { display: flex; align-items: center; gap: 16px; padding-block: 10px; flex-wrap: wrap; }
+.brand { display: flex; align-items: baseline; gap: 8px; margin-right: auto; }
+.brand b { font-family: var(--f-display); font-weight: 800; font-size: 22px; letter-spacing: -.02em; }
+.brand b span { background: linear-gradient(transparent 55%, var(--hi-mark) 55%, var(--hi-mark) 92%, transparent 92%); padding: 0 2px; }
+.brand small { color: var(--ink-2); font-size: 13px; }
+.nav { display: flex; gap: 4px; background: var(--surface-2); padding: 4px; border-radius: 999px; }
+.nav button { border: 0; background: transparent; padding: 7px 14px; border-radius: 999px; font-weight: 700; font-size: 14px; color: var(--ink-2); }
+.nav button[aria-current="page"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+.streak { font-size: 13px; font-weight: 700; color: var(--ink-2); display: flex; gap: 6px; align-items: center; }
+.streak i { font-style: normal; font-family: var(--f-display); font-size: 18px; color: var(--ink); }
+@media (max-width: 640px) {
+  .brand small, .streak span { display: none; }
+  .nav { width: 100%; justify-content: space-between; }
+  .nav button { flex: 1; padding: 7px 6px; }
+}
+
+main { padding-block: 28px 64px; }
+.view[hidden] { display: none !important; }
+
+/* Shared bits */
+.eyebrow { font-size: 12px; letter-spacing: .09em; text-transform: uppercase; font-weight: 700; color: var(--ink-2); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 20px; }
+.btn { border: 1px solid var(--line); background: var(--surface); padding: 10px 16px; border-radius: 8px; font-weight: 700; font-size: 15px; display: inline-flex; align-items: center; gap: 8px; }
+.btn:hover { border-color: var(--ink-2); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.hi { background: var(--hi); color: var(--hi-ink); border-color: var(--hi); }
+.btn.ghost { background: transparent; border-color: transparent; color: var(--ink-2); }
+.btn.ghost:hover { color: var(--ink); }
+.btn.sm { padding: 6px 11px; font-size: 13px; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.mark { background: linear-gradient(transparent 52%, var(--hi-mark) 52%, var(--hi-mark) 94%, transparent 94%); color: inherit; padding: 0 2px; }
+.chip { display: inline-block; font-size: 13px; padding: 2px 9px; border-radius: 999px; background: var(--surface-2); color: var(--ink); }
+.chip.syn { background: var(--good-soft); }
+.chip.ant { background: var(--bad-soft); }
+.pill { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.pill.new { background: var(--surface-2); color: var(--ink-2); }
+.pill.ok { background: var(--good-soft); color: var(--good); }
+.pill.due { background: var(--hi); color: var(--hi-ink); }
+.pill.today { background: var(--accent-soft); color: var(--accent); }
+.muted { color: var(--ink-2); }
+.pos { font-family: var(--f-read); font-style: italic; color: var(--ink-2); }
+.def { font-family: var(--f-read); font-size: 18px; line-height: 1.45; }
+.ex { font-family: var(--f-read); font-style: italic; }
+input.text { width: 100%; border: 2px solid var(--line); background: var(--surface); border-radius: 8px; padding: 12px 14px; font-size: 20px; font-family: var(--f-display); font-weight: 700; letter-spacing: .01em; }
+input.text:focus { border-color: var(--accent); outline: none; }
+input.text.good { border-color: var(--good); background: var(--good-soft); }
+input.text.bad { border-color: var(--bad); background: var(--bad-soft); }
+
+/* Today */
+.today-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
+.today-head h1 { font-size: clamp(30px, 5vw, 46px); font-weight: 800; letter-spacing: -.025em; }
+.stats { display: flex; gap: 22px; }
+.stat b { display: block; font-family: var(--f-display); font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 12px; color: var(--ink-2); text-transform: uppercase; letter-spacing: .08em; font-weight: 700; }
+.today-grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 18px; align-items: start; }
+@media (max-width: 820px) { .today-grid { grid-template-columns: 1fr; } }
+.stack { display: grid; gap: 18px; min-width: 0; }
+.refresh { border: 2px solid var(--hi); background: color-mix(in srgb, var(--hi) 14%, var(--surface)); }
+.refresh h2 { font-size: 22px; margin: 4px 0 6px; }
+.due-list { display: grid; gap: 8px; margin-top: 14px; }
+.due-item { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+.due-item .words { flex: 1; min-width: 0; font-size: 14px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.due-item b { font-family: var(--f-display); white-space: nowrap; }
+.todayset h2 { font-size: 26px; margin: 4px 0 14px; }
+.word-preview { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 8px; margin-bottom: 18px; }
+.wp { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px 8px 10px; text-align: center; font-family: var(--f-display); font-weight: 700; font-size: 15px; position: relative; overflow: hidden; }
+.wp::before { content: ""; position: absolute; left: 0; right: 0; top: 6px; border-top: 2px solid var(--margin); opacity: .8; }
+.quick { display: grid; gap: 10px; }
+.quick button { text-align: left; display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: var(--r); border: 1px solid var(--line); background: var(--surface); }
+.quick button:hover { border-color: var(--accent); }
+.quick .ico { width: 38px; height: 38px; border-radius: 8px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); flex: none; }
+.quick b { display: block; font-family: var(--f-display); font-size: 16px; }
+.quick span { font-size: 13px; color: var(--ink-2); }
+.tricky { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.bar { height: 8px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
+
+/* Sets */
+.sets-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+.sets-top h1 { font-size: 34px; font-weight: 800; letter-spacing: -.02em; }
+.search { max-width: 320px; width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 10px 12px; }
+.set-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.set-tile { text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: var(--r); padding: 12px; display: grid; gap: 6px; min-height: 108px; align-content: start; }
+.set-tile:hover { border-color: var(--accent); }
+.set-tile[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+.set-tile .n { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.set-tile .n b { font-family: var(--f-display); font-size: 18px; font-weight: 800; }
+.set-tile .w { font-size: 12.5px; color: var(--ink-2); line-height: 1.35; }
+.set-detail { margin-top: 18px; }
+.set-detail h2 { font-size: 26px; }
+.word-table { width: 100%; border-collapse: collapse; margin: 14px 0 18px; }
+.word-table td { padding: 10px 8px; border-top: 1px solid var(--line); vertical-align: top; }
+.word-table td:first-child { font-family: var(--f-display); font-weight: 700; font-size: 17px; white-space: nowrap; width: 1%; }
+.word-table .def { font-size: 16px; }
+.table-scroll { overflow-x: auto; }
+
+/* Session */
+.session-top { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; flex-wrap: wrap; }
+.session-top h1 { font-size: 22px; font-weight: 800; }
+.steps { display: flex; gap: 6px; margin-left: auto; }
+.steps span { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: var(--surface-2); color: var(--ink-2); }
+.steps span.on { background: var(--ink); color: var(--bg); }
+.steps span.done { background: var(--good-soft); color: var(--good); }
+.stage { max-width: 680px; margin: 0 auto; display: grid; gap: 18px; }
+.progress-line { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-2); font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* Index card flip */
+.card-scene { perspective: 1400px; }
+.card { position: relative; width: 100%; min-height: 330px; transform-style: preserve-3d; transition: transform .55s cubic-bezier(.2,.8,.2,1); cursor: pointer; border: 0; padding: 0; background: none; text-align: left; display: block; }
+.card.flipped { transform: rotateY(180deg); }
+.face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; background: var(--surface); border-radius: 6px; box-shadow: var(--shadow); border: 1px solid var(--line); overflow: hidden; }
+.face.front { background-image: repeating-linear-gradient(var(--surface) 0 31px, var(--rule) 31px 32px); background-position: 0 70px; display: grid; place-items: center; text-align: center; padding: 20px; }
+.face.front::before, .face.back::before { content: ""; position: absolute; left: 0; right: 0; top: 56px; border-top: 2px solid var(--margin); }
+.face.front .big { font-family: var(--f-display); font-weight: 800; font-size: clamp(36px, 8vw, 58px); letter-spacing: -.02em; line-height: 1; word-break: break-word; }
+.face.front .hint { position: absolute; bottom: 14px; left: 0; right: 0; font-size: 13px; color: var(--ink-2); }
+.face.front .corner, .face.back .corner { position: absolute; top: 18px; left: 20px; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+.face.back { transform: rotateY(180deg); padding: 74px 24px 20px; display: grid; gap: 12px; align-content: start; overflow-y: auto; }
+.face.back h3 { font-size: 26px; font-weight: 800; }
+.face.back .lbl { font-size: 11px; letter-spacing: .09em; text-transform: uppercase; font-weight: 700; color: var(--ink-2); margin-bottom: 4px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+@media (prefers-reduced-motion: reduce) { .card { transition: none; } }
+@media (max-width: 520px) { .card { min-height: 400px; } }
+
+.typer label { display: block; font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+.feedback { font-size: 15px; min-height: 22px; }
+.feedback.good { color: var(--good); font-weight: 700; }
+.feedback.bad { color: var(--bad); font-weight: 700; }
+.prompt-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 22px; display: grid; gap: 12px; }
+.prompt-card .def { font-size: 21px; }
+.blank { display: inline-block; min-width: 90px; border-bottom: 2px solid var(--ink); margin: 0 3px; transform: translateY(-3px); }
+.quiz-q { font-family: var(--f-read); font-size: 21px; line-height: 1.5; }
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 520px) { .choices { grid-template-columns: 1fr; } }
+.choice { text-align: left; padding: 14px 16px; border-radius: 8px; border: 2px solid var(--line); background: var(--surface); font-family: var(--f-display); font-weight: 700; font-size: 17px; display: flex; gap: 10px; align-items: center; }
+.choice kbd { font-family: var(--f-ui); font-size: 12px; border: 1px solid var(--line); border-radius: 4px; padding: 0 6px; color: var(--ink-2); }
+.choice:hover:not(:disabled) { border-color: var(--accent); }
+.choice.right { border-color: var(--good); background: var(--good-soft); }
+.choice.wrong { border-color: var(--bad); background: var(--bad-soft); }
+.choice:disabled { cursor: default; }
+.explain { border-left: 4px solid var(--hi); padding: 6px 0 6px 14px; font-size: 15px; }
+.result { text-align: center; display: grid; gap: 14px; justify-items: center; }
+.result .score { font-family: var(--f-display); font-size: 64px; font-weight: 800; line-height: 1; }
+.review-list { width: 100%; text-align: left; display: grid; gap: 8px; }
+.review-list div { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-size: 14px; }
+
+/* Tutor */
+.tutor { display: grid; grid-template-columns: 260px 1fr; gap: 18px; align-items: start; }
+@media (max-width: 820px) { .tutor { grid-template-columns: 1fr; } }
+.tutor aside { display: grid; gap: 14px; }
+.tutor aside h1 { font-size: 30px; font-weight: 800; letter-spacing: -.02em; }
+.prompts { display: grid; gap: 8px; }
+.prompts button { text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 10px 12px; font-size: 14px; }
+.prompts button:hover { border-color: var(--accent); }
+.chat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); display: flex; flex-direction: column; height: min(72vh, 680px); min-height: 440px; min-width: 0; }
+.thread { flex: 1; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.msg { max-width: 88%; padding: 10px 14px; border-radius: 12px; line-height: 1.5; font-size: 15.5px; overflow-wrap: anywhere; }
+.msg.me { align-self: flex-end; background: var(--accent); color: var(--accent-ink); border-bottom-right-radius: 4px; }
+.msg.bot { align-self: flex-start; background: var(--surface-2); border-bottom-left-radius: 4px; }
+.msg.bot strong { background: linear-gradient(transparent 55%, var(--hi-mark) 55%, var(--hi-mark) 92%, transparent 92%); color: inherit; }
+.msg.note { align-self: center; background: transparent; color: var(--ink-2); font-size: 13px; text-align: center; }
+.msg ul { margin: 6px 0; padding-left: 20px; }
+.msg.thinking { color: var(--ink-2); font-style: italic; }
+.composer { border-top: 1px solid var(--line); padding: 12px; display: flex; gap: 8px; }
+.composer textarea { flex: 1; min-width: 0; resize: none; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: var(--bg); height: 46px; }
+.gen-quiz { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 12px; align-self: stretch; }
+.gen-quiz .quiz-q { font-size: 17px; }
+.gen-quiz .choice { font-size: 15px; padding: 10px 12px; }
+select.sel { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 8px 10px; }
+
+/* Runner */
+.runner-setup { display: grid; grid-template-columns: 1fr 300px; gap: 18px; align-items: start; }
+@media (max-width: 820px) { .runner-setup { grid-template-columns: 1fr; } }
+.runner-setup h1 { font-size: 34px; font-weight: 800; letter-spacing: -.02em; }
+.pick-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 6px; margin-top: 12px; }
+.pick-grid label { border: 1px solid var(--line); border-radius: 8px; padding: 8px 4px; text-align: center; font-weight: 700; font-size: 14px; cursor: pointer; background: var(--surface); position: relative; font-variant-numeric: tabular-nums; }
+.pick-grid label.learned::after { content: ""; position: absolute; top: 5px; right: 5px; width: 6px; height: 6px; border-radius: 50%; background: var(--good); }
+.pick-grid input { position: absolute; opacity: 0; pointer-events: none; }
+.pick-grid label:has(input:checked) { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.pick-grid label:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+.seg { display: flex; background: var(--surface-2); border-radius: 8px; padding: 3px; gap: 3px; }
+.seg label { flex: 1; text-align: center; padding: 7px 6px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; color: var(--ink-2); }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label:has(input:checked) { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+.seg label:has(input:focus-visible) { outline: 3px solid var(--accent); }
+.field { display: grid; gap: 6px; }
+.field > span { font-size: 13px; font-weight: 700; }
+.game-wrap { position: relative; border-radius: 12px; overflow: hidden; background: #0A0B1E; user-select: none; -webkit-user-select: none; touch-action: none; }
+.game-wrap canvas { display: block; width: 100%; }
+.overlay { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(6,7,22,.78); color: #F3F1FF; text-align: center; padding: 20px; overflow-y: auto; }
+.overlay h2 { font-size: 36px; font-weight: 800; color: #FFE45C; }
+.overlay .big { font-family: var(--f-display); font-size: 56px; font-weight: 800; line-height: 1; }
+.overlay .btn { background: #FFE45C; color: #141B2E; border-color: #FFE45C; }
+.overlay .btn.ghost { background: transparent; color: #F3F1FF; border-color: rgba(255,255,255,.3); }
+.overlay .missed { display: grid; gap: 6px; text-align: left; max-width: 460px; margin: 6px auto; font-size: 14px; }
+.overlay .missed div { background: rgba(255,255,255,.08); border-radius: 6px; padding: 6px 10px; }
+.touch-pad { display: none; gap: 8px; margin-top: 10px; }
+.touch-pad button { flex: 1; padding: 16px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); font-weight: 800; font-size: 16px; touch-action: manipulation; }
+@media (hover: none), (max-width: 700px) { .touch-pad { display: flex; } }
+.keys { font-size: 13px; color: var(--ink-2); }
+.keys kbd { border: 1px solid var(--line); border-radius: 4px; padding: 0 6px; font-family: var(--f-ui); background: var(--surface); }
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 999px; font-weight: 700; font-size: 14px; z-index: 50; box-shadow: var(--shadow); }
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand"><b>Five <span>a Day</span></b><small>SAT vocabulary, five words at a time</small></div>
+    <div class="streak" id="streak" title="Days in a row with practice"><i id="streakN">0</i><span>day streak</span></div>
+    <nav class="nav" aria-label="Sections">
+      <button data-go="today" aria-current="page">Today</button>
+      <button data-go="sets">Sets</button>
+      <button data-go="tutor">Tutor</button>
+      <button data-go="runner">Runner</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="view" id="v-today"></section>
+  <section class="view" id="v-sets" hidden></section>
+  <section class="view" id="v-session" hidden></section>
+
+  <section class="view" id="v-tutor" hidden>
+    <div class="tutor">
+      <aside>
+        <div>
+          <div class="eyebrow">AI tutor</div>
+          <h1>Practice out loud</h1>
+          <p class="muted" style="margin:6px 0 0">Ask for a quiz on any set, check a sentence you wrote, or get two tricky words untangled.</p>
+        </div>
+        <div class="prompts" id="tutorPrompts"></div>
+        <div class="panel" style="padding:14px;display:grid;gap:10px">
+          <div class="eyebrow">Generate a fill-in quiz</div>
+          <div class="row">
+            <select class="sel" id="genSet" aria-label="Set to quiz"></select>
+            <button class="btn primary sm" id="genBtn">Make 5 questions</button>
+          </div>
+        </div>
+      </aside>
+      <div class="chat">
+        <div class="thread" id="thread" aria-live="polite"></div>
+        <form class="composer" id="composer">
+          <textarea id="chatIn" placeholder="Try: quiz me on set 5" aria-label="Message the tutor"></textarea>
+          <button class="btn primary" id="sendBtn" type="submit">Send</button>
+          <button class="btn" id="stopBtn" type="button" hidden>Stop</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="v-runner" hidden>
+    <div id="runnerSetup" class="runner-setup">
+      <div class="stack">
+        <div>
+          <div class="eyebrow">Word Runner</div>
+          <h1>Run the gates</h1>
+          <p class="muted" style="margin:6px 0 0;max-width:60ch">A clue appears at the top. Three gates race toward you, each with a word. Switch lanes into the gate that matches, jump the barriers, and grab the stars. Pick the sets you want to play with.</p>
+        </div>
+        <div class="panel">
+          <div class="row" style="justify-content:space-between">
+            <b>Sets in play <span class="muted" id="pickCount"></span></b>
+            <div class="row">
+              <button class="btn sm" id="pickToday">Today's set</button>
+              <button class="btn sm" id="pickLearned">All learned</button>
+              <button class="btn sm ghost" id="pickClear">Clear</button>
+            </div>
+          </div>
+          <div class="pick-grid" id="pickGrid"></div>
+          <p class="muted" style="font-size:13px;margin:10px 0 0">Green dot = a set you've learned.</p>
+        </div>
+      </div>
+      <div class="panel" style="display:grid;gap:16px">
+        <div class="field"><span>Clue type</span>
+          <div class="seg" role="radiogroup" aria-label="Clue type">
+            <label><input type="radio" name="clue" value="def" checked>Definition</label>
+            <label><input type="radio" name="clue" value="sent">Sentence</label>
+            <label><input type="radio" name="clue" value="syn">Synonyms</label>
+          </div>
+        </div>
+        <div class="field"><span>Mode</span>
+          <div class="seg" role="radiogroup" aria-label="Mode">
+            <label><input type="radio" name="mode" value="survive" checked>3 lives</label>
+            <label><input type="radio" name="mode" value="sprint">90-sec sprint</label>
+          </div>
+        </div>
+        <button class="btn hi" id="startRun" style="justify-content:center;font-size:17px;padding:14px">Start running</button>
+        <div class="keys"><kbd>←</kbd> <kbd>→</kbd> switch lanes · <kbd>↑</kbd> or <kbd>Space</kbd> jump · <kbd>P</kbd> pause. On a phone, swipe or use the buttons.</div>
+        <div class="muted" style="font-size:14px">Best score: <b id="bestScore">0</b></div>
+      </div>
+    </div>
+    <div id="runnerGame" hidden>
+      <div class="row" style="justify-content:space-between;margin-bottom:10px">
+        <button class="btn sm" id="quitRun">← Back to setup</button>
+        <span class="keys"><kbd>←</kbd><kbd>→</kbd> lanes · <kbd>Space</kbd> jump · <kbd>P</kbd> pause</span>
+      </div>
+      <div class="game-wrap" id="gameWrap">
+        <canvas id="game" aria-label="Word Runner game"></canvas>
+        <div class="overlay" id="gameOverlay" hidden></div>
+      </div>
+      <div class="touch-pad">
+        <button id="tpL" aria-label="Move left">◀ Left</button>
+        <button id="tpJ" aria-label="Jump">▲ Jump</button>
+        <button id="tpR" aria-label="Move right">Right ▶</button>
+      </div>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast" hidden></div>
+<script>
+// [word, part of speech, definition, synonyms, antonyms, example sentence, hard quiz sentence (base form fills ___)]
+const RAW = [
+// Set 1
+["ambivalent","adj","having mixed or contradictory feelings about something","conflicted, uncertain, torn","certain, decisive","Maya felt ambivalent about moving: she loved the new city but hated leaving her friends.","Though the senator publicly praised the bill, her private letters reveal she was deeply ___, alternately calling it \"necessary\" and \"a mistake.\""],
+["pragmatic","adj","dealing with things in a practical way, based on what actually works","practical, realistic, sensible","idealistic, impractical","Rather than argue about perfect solutions, the mayor took a pragmatic approach and fixed the worst roads first.","Abandoning her dream of a flawless design, the engineer made the ___ choice to use cheaper parts that would actually ship on time."],
+["undermine","verb","to weaken gradually or secretly","weaken, sabotage, erode","strengthen, bolster","Constant rumors began to undermine the coach's authority.","The scientist worried that a single falsified data point could ___ the credibility of the entire decade-long study."],
+["corroborate","verb","to confirm or support with evidence","confirm, verify, substantiate","contradict, refute","Security footage corroborated the witness's account.","Without a second, independent lab to ___ the results, the journal refused to publish the startling claim."],
+["meticulous","adj","showing great attention to detail; extremely careful and precise","thorough, painstaking, scrupulous","careless, sloppy","The meticulous editor caught every misplaced comma.","Known for being ___, the archivist labeled every one of the 4,000 letters by date, sender, and even ink color."],
+// Set 2
+["ubiquitous","adj","present, appearing, or found everywhere","omnipresent, pervasive, universal","rare, scarce","Smartphones have become so ubiquitous that it's hard to find a classroom without one.","Once a luxury found only in a few wealthy homes, electric lighting became so ___ within fifty years that people stopped noticing it at all."],
+["mitigate","verb","to make something bad less severe or serious","lessen, ease, reduce","intensify, aggravate","Planting trees along the river helped mitigate flooding.","The city could not prevent the heat wave, but it opened cooling centers to ___ its effects on elderly residents."],
+["candid","adj","truthful and straightforward; frank","frank, forthright, blunt","evasive, guarded","In a candid interview, the actor admitted he had nearly quit.","Rather than offering the usual polite praise, the mentor gave a ___ assessment: the essay's argument, she said, simply didn't hold together."],
+["advocate","verb","to publicly support or recommend a cause or policy","champion, promote, endorse","oppose, criticize","The students advocate for later school start times.","For decades the doctor continued to ___ handwashing in hospitals, even as colleagues mocked the idea as unscientific."],
+["benevolent","adj","well-meaning and kindly; generous","charitable, kindly, compassionate","malevolent, cruel","A benevolent donor paid off the library's debt.","Villagers remembered the old landowner as ___, a man who forgave debts in bad harvest years and quietly paid for the school roof."],
+// Set 3
+["scrutinize","verb","to examine closely and thoroughly","inspect, examine, analyze","ignore, overlook","The editor scrutinized every sentence for errors.","Before signing the lease, Dana chose to ___ each clause, suspecting the landlord had buried an extra fee in the fine print."],
+["ephemeral","adj","lasting for a very short time","fleeting, transient, brief","permanent, enduring","The ephemeral beauty of cherry blossoms draws crowds each spring.","Social media trends tend to be ___: a dance that dominates feeds on Monday is often forgotten by Friday."],
+["diligent","adj","showing steady, careful effort in one's work","industrious, conscientious, hardworking","lazy, negligent","Diligent practice turned her into a confident pianist.","Because she was ___ about reviewing her notes every night instead of cramming, Priya rarely felt panic before exams."],
+["alleviate","verb","to make suffering or a problem less severe","relieve, ease, soothe","worsen, aggravate","The medicine alleviated his headache within an hour.","The new bus route was designed to ___ the overcrowding that had made the morning commute miserable."],
+["skeptical","adj","not easily convinced; having doubts","doubtful, dubious, suspicious","convinced, credulous","Scientists were skeptical of the miracle cure.","Having been fooled by three \"revolutionary\" diet products, Leo was ___ when yet another ad promised effortless weight loss."],
+// Set 4
+["eloquent","adj","fluent and persuasive in speaking or writing","articulate, expressive, persuasive","inarticulate, tongue-tied","Her eloquent speech moved the audience to tears.","Though he stumbled through ordinary conversation, the poet became remarkably ___ at the podium, his words so vivid that listeners forgot to breathe."],
+["indifferent","adj","having no particular interest or concern","apathetic, unconcerned, detached","concerned, passionate","He seemed indifferent to the outcome of the game.","The cat remained completely ___ to the expensive toy, preferring to play with the cardboard box it came in."],
+["reconcile","verb","to restore friendly relations; to make two things compatible","harmonize, reunite, resolve","alienate, divide","The brothers reconciled after years of silence.","The historian struggled to ___ the general's heroic public image with diary entries revealing his cowardice."],
+["profound","adj","very great or intense; showing deep insight","deep, insightful, far-reaching","superficial, shallow","The printing press had a profound effect on society.","What began as a casual question from a child led the philosopher to a ___ realization about the nature of memory."],
+["arbitrary","adj","based on random choice or personal whim rather than reason","random, unreasoned, whimsical","rational, principled","The rule seemed arbitrary: why ban blue pens but not black ones?","Employees resented the manager's ___ decisions; one week remote work was allowed, the next it was banned, with no explanation either time."],
+// Set 5
+["resilient","adj","able to recover quickly from difficulties","tough, adaptable, buoyant","fragile, vulnerable","Coral reefs are more resilient than scientists once thought.","After losing her job and her apartment in the same month, Rosa proved remarkably ___, launching a small business within a year."],
+["conspicuous","adj","standing out so as to be clearly visible; attracting attention","noticeable, obvious, prominent","inconspicuous, hidden","His bright orange jacket made him conspicuous in the crowd.","Trying to blend in at the formal gala, Omar felt painfully ___ in the only suit he owned: bright green and two sizes too big."],
+["deter","verb","to discourage someone from doing something","discourage, prevent, dissuade","encourage, provoke","Security cameras deter shoplifters.","Not even three straight days of freezing rain could ___ the volunteers from finishing the community garden."],
+["elusive","adj","difficult to find, catch, or achieve","slippery, evasive, hard to pin down","attainable, obvious","A cure for the common cold remains elusive.","For years the snow leopard remained ___, appearing only as a blurry shape in the researchers' trail-camera footage."],
+["frugal","adj","careful and economical with money or resources","thrifty, economical, sparing","extravagant, wasteful","Being frugal, she saved half of every paycheck.","Her grandfather was so ___ that he reused tea bags twice and repaired his shoes instead of buying new ones."],
+// Set 6
+["tenacious","adj","holding firmly to something; persistent","determined, persistent, dogged","irresolute, yielding","The tenacious reporter called every day until she got an answer.","The ___ ivy survived three attempts to rip it out and crept back up the wall each spring."],
+["obsolete","adj","no longer produced or used; out of date","outdated, antiquated, defunct","current, modern","Fax machines are nearly obsolete.","Once cutting-edge, the company's flagship camera became ___ almost overnight when phones started taking better photos."],
+["articulate","verb","to express an idea or feeling clearly in words","express, voice, convey","mumble, obscure","She struggled to articulate why the painting moved her.","Asked why he wanted to be a doctor, Sam found it surprisingly hard to ___ a reason beyond \"I just do.\""],
+["benign","adj","gentle and harmless; (medicine) not cancerous","harmless, mild, gentle","harmful, malignant","The doctor was relieved to find the tumor was benign.","At first the software update seemed ___, but it quietly drained batteries and slowed every phone that installed it."],
+["contempt","noun","the feeling that someone or something is worthless or beneath consideration","scorn, disdain, disrespect","respect, admiration","The critic's review dripped with contempt.","The aristocrat regarded the new factory owners with open ___, sneering that money could never buy good breeding."],
+// Set 7
+["aesthetic","adj","concerned with beauty or the appreciation of beauty","artistic, visual, stylistic","unattractive, purely functional","The architect cared about both function and aesthetic appeal.","The committee rejected the bridge design not for engineering reasons but on ___ grounds: it was, they said, simply ugly."],
+["anomaly","noun","something that deviates from what is standard or expected","irregularity, exception, oddity","norm, rule","A snowstorm in June is an anomaly in Texas.","Researchers first dismissed the single strange reading as a statistical ___, until it appeared again in three other labs."],
+["coherent","adj","logical and consistent; able to speak clearly","logical, clear, consistent","incoherent, confused","Her essay presented a coherent argument.","Exhausted after thirty hours without sleep, the pilot could barely form ___ sentences when the rescuers reached him."],
+["discern","verb","to perceive or recognize something, often with difficulty","detect, perceive, distinguish","overlook, miss","In the fog, it was hard to discern the shoreline.","Experienced tasters can ___ subtle notes of cherry and smoke that most people would never notice."],
+["empirical","adj","based on observation or experiment rather than theory","observed, experimental, evidence-based","theoretical, speculative","The theory lacked empirical support.","The philosopher's elegant argument collapsed once researchers gathered ___ data showing that people behave nothing like his model predicted."],
+// Set 8
+["fervent","adj","having or showing intense passion","ardent, passionate, zealous","apathetic, indifferent","She was a fervent supporter of animal rights.","Even after the team lost twenty games in a row, its most ___ fans still painted their faces and chanted for three hours in the rain."],
+["lethargic","adj","sluggish and lacking energy","sluggish, drowsy, listless","energetic, lively","The heat made everyone lethargic.","After the huge holiday meal, the whole family grew ___, sprawling across the couches and barely managing to change the channel."],
+["novice","noun","a person new to or inexperienced in an activity","beginner, newcomer, amateur","expert, veteran","As a novice, he fell off the snowboard every few feet.","Although she was a complete ___ at chess, her unpredictable moves confused the tournament veteran."],
+["impetuous","adj","acting quickly without thought or care","impulsive, rash, hasty","cautious, deliberate","In an impetuous moment, he quit his job without a backup plan.","Known for ___ decisions, the prince once declared war over a single insulting letter, before his advisers had even finished reading it."],
+["concise","adj","giving a lot of information clearly in few words","brief, succinct, to the point","wordy, verbose","Write a concise summary in fewer than fifty words.","The famous telegram was admirably ___: in six words it conveyed the victory, the losses, and the need for reinforcements."],
+// Set 9
+["comprehensive","adj","including all or nearly all elements or aspects","thorough, complete, exhaustive","partial, limited","The final exam is comprehensive, covering the entire year.","Unlike earlier surveys that sampled a few neighborhoods, the new census was truly ___, counting every household in all forty districts."],
+["deference","noun","humble respect and submission to another's judgment","respect, regard, submission","defiance, disrespect","In deference to her grandmother, she removed her hat indoors.","Out of ___ to the elderly judge, the young lawyers waited silently until she had finished speaking, even when she rambled."],
+["dubious","adj","hesitating or doubting; not to be relied upon","questionable, suspect, doubtful","trustworthy, reliable","The website made dubious claims about vitamins.","The \"ancient map\" had ___ origins: its paper contained fibers that weren't manufactured until 1950."],
+["exemplify","verb","to be a typical example of","typify, embody, illustrate","contradict, misrepresent","Her kindness exemplifies the school's values.","With its flying buttresses and soaring stained glass, the cathedral seems to ___ everything that defined Gothic architecture."],
+["futile","adj","incapable of producing any useful result; pointless","pointless, useless, vain","effective, fruitful","It was futile to argue with the referee.","Realizing that bailing water was ___ as waves poured over the side, the crew abandoned the boat and swam for the rocks."],
+// Set 10
+["hackneyed","adj","lacking originality because of overuse","clichéd, trite, stale","original, fresh","The movie's hackneyed plot, an unlikely hero saving the world, bored critics.","The judges rejected the essay for its ___ opening, \"Webster's Dictionary defines success as...\", a line they had read a thousand times."],
+["innate","adj","inborn; natural rather than learned","inborn, inherent, natural","acquired, learned","Babies have an innate fear of falling.","Linguists debate whether our capacity for grammar is ___ or whether children simply absorb it from the speech around them."],
+["jeopardize","verb","to put someone or something into a situation of risk","endanger, threaten, imperil","protect, safeguard","Skipping practice could jeopardize her spot on the team.","A single careless post online could ___ the scholarship that Mateo had spent four years earning."],
+["lucid","adj","expressed clearly and easy to understand; mentally clear","clear, intelligible, rational","confusing, muddled","The professor gave a lucid explanation of black holes.","Despite her high fever, the patient had ___ moments in which she recognized her family and asked sensible questions."],
+["gregarious","adj","fond of company; sociable","sociable, outgoing, convivial","introverted, reclusive","Gregarious by nature, Tomas knew everyone at the party.","Unlike his ___ twin, who organized every party, Eli preferred spending Friday nights alone with a book."],
+// Set 11
+["malleable","adj","easily shaped or influenced","pliable, flexible, impressionable","rigid, inflexible","Gold is a malleable metal.","Young children's opinions are so ___ that a single enthusiastic teacher can turn a whole class into lifelong bird-watchers."],
+["negligent","adj","failing to take proper care","careless, neglectful, lax","careful, attentive","The negligent driver was texting when he ran the red light.","The court found the landlord ___ because he had ignored tenants' complaints about the broken railing for months before it collapsed."],
+["ostentatious","adj","showy and designed to impress others","showy, flashy, pretentious","modest, understated","The billionaire's ostentatious mansion had three swimming pools.","Guests found the wedding a bit ___: the couple arrived by helicopter, released a hundred doves, and served dessert on gold-leaf plates."],
+["paradox","noun","a seemingly contradictory statement that may nonetheless be true","contradiction, puzzle, inconsistency","consistency, certainty","It's a paradox that more choices can make us less happy.","Economists point to a strange ___: making engines more fuel-efficient can actually cause total fuel consumption to rise."],
+["placate","verb","to calm someone by making concessions","pacify, appease, mollify","provoke, enrage","The manager offered a free dessert to placate the angry customer.","To ___ the furious neighbors, the band promised to stop rehearsing after 9 p.m. and sent over a box of cookies."],
+// Set 12
+["prolific","adj","producing much fruit, work, or offspring","productive, fruitful, fertile","unproductive, barren","Agatha Christie was a prolific writer, publishing more than sixty novels.","The ___ inventor filed over a thousand patents, though only a handful ever became real products."],
+["reticent","adj","not revealing one's thoughts or feelings readily","reserved, quiet, tight-lipped","talkative, forthcoming","He was reticent about his past.","Normally ___ in class, Aiyana surprised everyone by delivering a passionate ten-minute speech on climate policy."],
+["superfluous","adj","unnecessary, especially through being more than enough","unnecessary, excessive, redundant","essential, necessary","Cut any superfluous words from your essay.","The editor slashed the manuscript by a third, arguing that entire chapters were ___ and slowed the story without adding anything."],
+["tentative","adj","not certain or fixed; hesitant","provisional, hesitant, uncertain","definite, confident","We made tentative plans to meet on Friday.","The toddler took a few ___ steps across the room, clutching the couch as if it might be taken away."],
+["vindicate","verb","to clear of blame or suspicion; to prove right","exonerate, justify, clear","accuse, blame","New DNA evidence vindicated the wrongly convicted man.","Wegener was mocked for insisting that continents drift, and he did not live to see later discoveries ___ his theory."],
+// Set 13
+["zealous","adj","having great energy or enthusiasm for a cause","fervent, passionate, fanatical","apathetic, halfhearted","The zealous volunteers knocked on every door in town.","The new hall monitor was so ___ in enforcing the rules that he wrote up a teacher for walking in the wrong direction."],
+["adversity","noun","difficulties; misfortune","hardship, misfortune, trouble","prosperity, good fortune","She overcame great adversity to graduate.","Raised in poverty and orphaned at twelve, the composer transformed ___ into music of astonishing tenderness."],
+["astute","adj","able to accurately assess situations and turn this to one's advantage","shrewd, perceptive, sharp","naive, foolish","An astute investor, she sold before the crash.","The ___ detective noticed that the victim's watch was set to the wrong time zone, a detail that exposed the killer's alibi."],
+["capricious","adj","given to sudden, unaccountable changes of mood or behavior","fickle, unpredictable, impulsive","steady, consistent","The capricious weather ruined our picnic plans.","Mountain climbers fear the region's ___ weather, which can shift from clear skies to a blizzard in less than an hour."],
+["censure","verb","to express severe, formal disapproval of","condemn, reprimand, criticize","praise, commend","The Senate voted to censure the member for misconduct.","The medical board voted to formally ___ the surgeon, though it stopped short of revoking his license."],
+// Set 14
+["complacent","adj","smugly satisfied and unaware of possible danger","smug, self-satisfied, careless","vigilant, concerned","After years at the top, the company grew complacent.","Leading by thirty points at halftime, the team grew ___, and their opponents quietly clawed back to win in the final seconds."],
+["condescending","adj","acting as though one is superior to others","patronizing, snobbish, superior","humble, respectful","His condescending tone suggested he thought we were children.","The tour guide's ___ explanations (\"This is called a painting, and it goes on a wall\") irritated the group of art professors."],
+["disparage","verb","to regard or represent as being of little worth","belittle, criticize, deride","praise, commend","Don't disparage your classmates' ideas.","Though rivals often tried to ___ her research as \"mere guesswork,\" her predictions kept proving correct."],
+["eccentric","adj","unconventional and slightly strange","unconventional, quirky, odd","conventional, ordinary","The eccentric inventor wore a colander as a hat.","The ___ millionaire left his fortune to his parrot and insisted on being buried in a replica of his favorite race car."],
+["embellish","verb","to make more attractive by adding details, often untrue ones","exaggerate, decorate, embroider","simplify, understate","He tends to embellish his fishing stories.","Each time Grandpa retold the story, he would ___ it further, until the small fish he caught had become a twelve-foot shark."],
+// Set 15
+["enigmatic","adj","difficult to interpret or understand; mysterious","mysterious, cryptic, inscrutable","clear, straightforward","The Mona Lisa's enigmatic smile fascinates viewers.","The spy's ___ final message, \"The rooster sings at noon,\" baffled every code breaker at headquarters."],
+["exacerbate","verb","to make a problem or bad situation worse","aggravate, worsen, intensify","alleviate, improve","Scratching will only exacerbate the rash.","Cutting bus service to save money will only ___ the city's traffic problem, since former riders will now drive to work."],
+["fastidious","adj","very attentive to accuracy and detail; hard to please","meticulous, fussy, particular","careless, sloppy","The fastidious chef rejected any tomato with a blemish.","So ___ was the chef that she rearranged each plate with tweezers and sent back any herb leaf that was slightly wilted."],
+["galvanize","verb","to shock or excite someone into taking action","spur, energize, rally","discourage, dampen","The speech galvanized the crowd.","News that the beloved park would be paved over seemed to ___ the sleepy neighborhood, which organized a protest within 48 hours."],
+["incessant","adj","continuing without pause or interruption","constant, unending, relentless","intermittent, occasional","The incessant barking kept me awake all night.","Noise-canceling headphones were the only escape from the ___ drilling next door, which ran from dawn to dusk every day."],
+// Set 16
+["indulgent","adj","allowing someone to have or do whatever they want","permissive, lenient, generous","strict, harsh","Indulgent parents let their kids eat candy for dinner.","Her ___ grandparents let her stay up past midnight, eat dessert first, and skip chores whenever she visited."],
+["ingenious","adj","clever, original, and inventive","inventive, clever, resourceful","unimaginative, dull","She came up with an ingenious fix using tape and a paperclip.","Stranded without tools, the astronauts devised a surprisingly ___ fix, using a sock, duct tape, and a plastic bag to repair the air filter."],
+["intrepid","adj","fearless; adventurous","fearless, bold, daring","timid, cowardly","The intrepid explorer crossed Antarctica alone.","Only the most ___ reporters stayed behind in the besieged city, sending dispatches as shells fell nearby."],
+["jubilant","adj","feeling or expressing great happiness and triumph","joyful, elated, triumphant","despondent, miserable","Jubilant fans poured onto the field.","The town was ___ when the long-missing hikers walked out of the forest, and church bells rang all afternoon."],
+["laudable","adj","deserving praise and commendation","praiseworthy, admirable, commendable","shameful, deplorable","Her efforts to clean up the beach were laudable.","The company's goal of zero waste was ___, even if critics pointed out it was years away from achieving it."],
+// Set 17
+["magnanimous","adj","generous or forgiving, especially toward a rival or less powerful person","generous, gracious, forgiving","petty, vindictive","In a magnanimous gesture, the winner praised her opponent.","Rather than gloating after his landslide victory, the new president was ___, inviting his defeated rival to join the cabinet."],
+["mundane","adj","lacking interest or excitement; dull and ordinary","ordinary, routine, humdrum","extraordinary, exciting","Folding laundry is a mundane chore.","Astronauts say the hardest part of life in orbit isn't danger but the ___ tasks, like cleaning filters and logging meals, that fill most of every day."],
+["nonchalant","adj","appearing casually calm and relaxed; not displaying anxiety","casual, unconcerned, relaxed","anxious, concerned","He gave a nonchalant shrug when he heard he'd won.","Trying to seem ___, Jae pretended to scroll on his phone while waiting to hear if he'd made varsity, though his hands were shaking."],
+["obstinate","adj","stubbornly refusing to change one's opinion or course of action","stubborn, headstrong, inflexible","flexible, compliant","The obstinate mule refused to move.","Even when shown the lab results, the ___ patient insisted he had never been sick a day in his life and refused treatment."],
+["opaque","adj","not able to be seen through; hard to understand","murky, unclear, cloudy","transparent, clear","The contract's opaque language confused everyone.","Critics complained that the agency's decision-making was ___: no one could learn who approved the contract or why."],
+// Set 18
+["partisan","adj","strongly supporting a party or cause, often with bias","biased, one-sided, factional","impartial, neutral","The partisan debate went nowhere.","The historian was accused of writing a ___ account, praising every decision of one party and ignoring the successes of the other."],
+["placid","adj","not easily upset or excited; calm and peaceful","calm, tranquil, serene","agitated, turbulent","The placid lake reflected the mountains.","The normally ___ cow startled everyone by kicking over the milk pail and charging the fence."],
+["precarious","adj","not securely held; dangerously likely to fall or collapse","unstable, shaky, perilous","secure, stable","The vase sat in a precarious position on the edge of the shelf.","With only two weeks of savings and no job offers, the family's financial situation had become ___."],
+["prudent","adj","acting with care and thought for the future","wise, sensible, cautious","reckless, rash","It would be prudent to save some money for emergencies.","Given the forecast of ice, the principal made the ___ decision to cancel the field trip, even though the morning sky looked clear."],
+["quell","verb","to put an end to, typically by force; to suppress","suppress, subdue, calm","incite, provoke","Police quickly quelled the riot.","The CEO held a press conference to ___ rumors that the company was about to go bankrupt."],
+// Set 19
+["rebuke","verb","to express sharp disapproval of someone's behavior","scold, reprimand, reproach","praise, commend","The coach rebuked the players for arriving late.","The teacher did not ___ the student in front of the class; instead she waited and spoke to him quietly in the hallway."],
+["relinquish","verb","to voluntarily give up","surrender, abandon, cede","retain, keep","The king was forced to relinquish his throne.","After fifty years at the helm, the founder finally agreed to ___ control of the company to her daughter."],
+["rhetoric","noun","language designed to persuade or impress, often seen as insincere","oratory, persuasion, bombast","plain speech, sincerity","The candidate's rhetoric was stirring but short on details.","Voters grew tired of the campaign's soaring ___, which promised \"a new dawn\" but never explained how anything would be paid for."],
+["salient","adj","most noticeable or important","prominent, notable, striking","minor, unimportant","Summarize the salient points of the article.","The lawyer ignored the minor inconsistencies and focused the jury on the most ___ fact: the defendant was in another country that night."],
+["sedentary","adj","involving much sitting and little physical activity","inactive, stationary, desk-bound","active, mobile","A sedentary lifestyle increases the risk of heart disease.","Doctors warn that office workers with ___ jobs should stand and stretch every hour to counter the effects of sitting all day."],
+// Set 20
+["sporadic","adj","occurring at irregular intervals or only in a few places","intermittent, occasional, irregular","constant, continuous","There was only sporadic rain during the drought.","Contact with the remote research station was ___, with messages arriving in bursts every few days and then nothing for weeks."],
+["stoic","adj","enduring pain and hardship without showing feelings or complaining","uncomplaining, impassive, long-suffering","emotional, complaining","She remained stoic through the painful recovery.","Though the injury was clearly agonizing, the ___ runner merely grimaced and limped across the finish line without a word."],
+["surreptitious","adj","kept secret, especially because it would not be approved of","secret, stealthy, covert","open, overt","He cast a surreptitious glance at his phone during the test.","Between bites, the kids fed the dog ___ scraps of broccoli under the table, careful that their parents never saw."],
+["tenuous","adj","very weak or slight","flimsy, weak, shaky","strong, solid","The connection between the two events is tenuous at best.","The prosecutor's case rested on a ___ link between the suspect and the crime: a partial footprint that could have belonged to thousands of people."],
+["trepidation","noun","a feeling of fear or anxiety about something that may happen","apprehension, dread, anxiety","confidence, calm","She opened the envelope with trepidation.","Having never flown before, the elderly man boarded the plane with visible ___, gripping the armrests before the engines had even started."],
+// Set 21
+["trivial","adj","of little value or importance","insignificant, minor, petty","important, significant","Don't waste time on trivial details.","The two friends stopped speaking for a year over a disagreement so ___ that neither could later remember what it was about."],
+["turbulent","adj","characterized by conflict, disorder, or confusion","chaotic, stormy, tumultuous","calm, peaceful","The 1960s were a turbulent decade in American history.","The country's ___ transition to democracy saw three governments collapse, two general strikes, and a failed coup within five years."],
+["unprecedented","adj","never done or known before","unparalleled, unheard-of, novel","common, familiar","The storm caused unprecedented flooding.","The athlete's feat was truly ___: no one in the sport's 120-year history had ever won all four titles in a single season."],
+["venerate","verb","to regard with great respect","revere, honor, worship","despise, scorn","Many cultures venerate their ancestors.","Jazz musicians still ___ Louis Armstrong, and many keep a photo of him tucked inside their instrument cases."],
+["volatile","adj","liable to change rapidly and unpredictably, especially for the worse","unstable, explosive, erratic","stable, steady","The stock market has been volatile this week.","Negotiators treaded carefully because the situation was ___: one careless word could turn a tense ceasefire back into open war."],
+// Set 22
+["wary","adj","cautious about possible dangers or problems","cautious, careful, suspicious","trusting, careless","Be wary of emails asking for passwords.","Having been bitten once as a child, Nadia remained ___ of dogs, crossing the street whenever one approached."],
+["whimsical","adj","playfully quaint or fanciful","playful, fanciful, quirky","serious, sober","The book had whimsical illustrations of dancing teacups.","The café's ___ decor, with upside-down umbrellas on the ceiling and teacups used as flowerpots, made every visitor smile."],
+["abate","verb","to become less intense or widespread","subside, diminish, lessen","intensify, increase","We waited for the storm to abate.","The ferry would not leave the harbor until the winds began to ___, so passengers settled in for a long wait."],
+["abstain","verb","to choose not to do or have something, such as voting","refrain, decline, forgo","indulge, partake","Three senators chose to abstain from the vote.","Unwilling to support either candidate, two committee members decided to ___ when the final vote was called."],
+["acrimonious","adj","angry and bitter","bitter, hostile, rancorous","friendly, amicable","The divorce was acrimonious.","The debate over the budget turned ___, with council members shouting insults and one storming out of the chamber."],
+// Set 23
+["admonish","verb","to warn or reprimand someone firmly","scold, warn, reprimand","praise, approve","The librarian admonished us to keep our voices down.","The lifeguard blew her whistle to ___ the boys for running along the slippery pool deck."],
+["affable","adj","friendly, good-natured, and easy to talk to","friendly, amiable, genial","unfriendly, cold","The affable host made everyone feel welcome.","The new principal was so ___ that within a week students were stopping by her office just to chat."],
+["alacrity","noun","brisk and cheerful readiness","eagerness, willingness, enthusiasm","reluctance, apathy","She accepted the invitation with alacrity.","When the coach asked for a volunteer to lead warm-ups, Jamal jumped up with such ___ that he nearly knocked over the water cooler."],
+["altruistic","adj","showing selfless concern for the well-being of others","selfless, unselfish, charitable","selfish, self-serving","Her altruistic work at the shelter asked nothing in return.","Some biologists argue that apparently ___ behavior in animals, like a bird warning others of a hawk at its own risk, secretly benefits the helper's genes."],
+["anachronism","noun","something belonging to a period other than the one in which it appears","misplacement in time, archaism, relic","(no direct antonym)","A wristwatch in a movie about ancient Rome is an anachronism.","Eagle-eyed viewers spotted a glaring ___ in the medieval drama: a plastic water bottle sitting on the king's table."],
+// Set 24
+["antagonize","verb","to cause someone to become hostile","provoke, irritate, alienate","placate, soothe","Don't antagonize the dog by pulling its tail.","Worried she would ___ her new coworkers, Ana kept her criticisms of the office's outdated software to herself for the first month."],
+["apathy","noun","lack of interest, enthusiasm, or concern","indifference, disinterest, passivity","enthusiasm, passion","Voter apathy led to record-low turnout.","Organizers were dismayed by student ___: only eleven people showed up to vote on the new school mascot."],
+["arduous","adj","involving or requiring strenuous effort; difficult and tiring","grueling, strenuous, laborious","easy, effortless","The climb to the summit was arduous.","The pioneers' ___ journey across the mountains took five months, and fewer than half of their oxen survived it."],
+["audacious","adj","showing a willingness to take bold risks; sometimes rudely bold","bold, daring, brazen","timid, cautious","The thieves carried out an audacious daylight robbery.","The rookie's ___ plan, to attempt a trick no skater had ever landed in her very first competition, left the judges stunned."],
+["austere","adj","severe or strict; plain and without decoration","stark, severe, plain","ornate, luxurious","The monks lived in austere cells with only a bed and a candle.","Visitors expecting a palace were surprised by the billionaire's ___ bedroom: bare white walls, a narrow cot, and a single wooden chair."],
+// Set 25
+["bolster","verb","to support or strengthen","reinforce, boost, support","undermine, weaken","The good review bolstered her confidence.","To ___ her argument, the student added three peer-reviewed studies and a set of interviews with local farmers."],
+["brevity","noun","concise and exact use of words; shortness of time","conciseness, shortness, succinctness","verbosity, wordiness","The speech was praised for its brevity.","The Gettysburg Address is famous for its ___: Lincoln spoke for barely two minutes, while the previous speaker had talked for two hours."],
+["cacophony","noun","a harsh, discordant mixture of sounds","din, racket, clamor","harmony, silence","The cacophony of car horns filled the street.","As the orchestra tuned up, the hall filled with a ___ of squeaks, honks, and scraping strings that bore no resemblance to music."],
+["callous","adj","showing cruel disregard for others","heartless, cold, insensitive","compassionate, caring","It was callous to laugh at his injury.","The billionaire's ___ remark that the flood victims \"should have bought better houses\" drew outrage across the country."],
+["circumvent","verb","to find a way around an obstacle or rule","bypass, evade, sidestep","confront, obey","Hackers found a way to circumvent the firewall.","Rather than breaking the rule outright, the students found a way to ___ it: the ban covered phones, so they brought tablets instead."],
+// Set 26
+["coalesce","verb","to come together to form one mass or whole","unite, merge, combine","separate, divide","The small protest groups coalesced into a national movement.","Over millions of years, dust and gas in the cloud began to ___ into the dense clumps that would eventually become stars."],
+["cogent","adj","clear, logical, and convincing","compelling, persuasive, convincing","weak, unconvincing","She made a cogent case for a later start time.","The judge noted that while the defense had been passionate, the prosecution's argument was far more ___, supported at every step by evidence."],
+["complicit","adj","involved with others in wrongdoing","involved, implicated, collaborating","innocent, uninvolved","By staying silent, he became complicit in the cheating.","Although the accountant never stole a dollar himself, investigators argued he was ___ in the fraud because he signed off on the fake reports."],
+["concede","verb","to admit that something is true after first denying it; to surrender","admit, acknowledge, yield","deny, dispute","The candidate conceded defeat late on election night.","Even the scientist's fiercest critics had to ___ that her prediction, however strange it had seemed, matched the new data perfectly."],
+["convoluted","adj","extremely complex and difficult to follow","complicated, tangled, intricate","simple, straightforward","The movie's convoluted plot left the audience confused.","The tax form's instructions were so ___ that even the accountant needed three readings, a flowchart, and a phone call to understand line 14."],
+// Set 27
+["copious","adj","abundant in supply or quantity","plentiful, abundant, ample","scarce, meager","She took copious notes during the lecture.","The garden produced such ___ amounts of zucchini that the family began leaving bags of it on neighbors' porches at night."],
+["credulous","adj","having too great a readiness to believe things","gullible, naive, trusting","skeptical, suspicious","Credulous investors fell for the scam.","The con artist targeted ___ tourists, convincing them that the \"ancient coins\" he sold from a cardboard box were priceless artifacts."],
+["cynical","adj","believing that people are motivated purely by self-interest","distrustful, jaded, pessimistic","idealistic, trusting","Years in politics had made him cynical.","After watching three charities misuse donations, the journalist grew ___, assuming every fundraiser was secretly a scam."],
+["dearth","noun","a scarcity or lack of something","lack, scarcity, shortage","abundance, plenty","There is a dearth of affordable housing in the city.","A ___ of qualified teachers forced the rural district to cancel physics and chemistry for the entire year."],
+["debilitate","verb","to make someone or something very weak and infirm","weaken, cripple, incapacitate","strengthen, invigorate","The illness debilitated him for months.","Even a mild case of the disease can ___ patients for weeks, leaving them too weak to climb a flight of stairs."],
+// Set 28
+["decorum","noun","behavior in keeping with good taste and propriety","propriety, etiquette, dignity","impropriety, rudeness","The judge insisted on decorum in the courtroom.","The ambassador's aides were horrified when he abandoned all ___ and began dancing on the table at the state dinner."],
+["demagogue","noun","a political leader who seeks support by appealing to emotions and prejudice rather than reason","rabble-rouser, agitator, firebrand","statesman","The demagogue blamed every problem on outsiders.","Historians describe him as a classic ___: he offered no real policies, just fiery speeches blaming outsiders for every hardship the crowd had suffered."],
+["deplete","verb","to use up the supply or resources of","exhaust, drain, use up","replenish, restore","Overfishing has depleted the cod population.","Running air conditioners around the clock during the heat wave threatened to ___ the town's already strained power reserves."],
+["despondent","adj","in low spirits from loss of hope or courage","hopeless, dejected, downcast","hopeful, cheerful","He was despondent after failing the exam again.","After her third rejection letter in a week, the usually cheerful writer became ___, leaving her laptop closed for days."],
+["didactic","adj","intended to teach, often in a preachy or moralizing way","instructive, educational, preachy","entertaining, subtle","The film was so didactic it felt like a lecture.","Critics found the novel too ___: every chapter ended with a character explaining the moral lesson directly to the reader."],
+// Set 29
+["diffident","adj","modest or shy because of a lack of self-confidence","shy, timid, self-effacing","confident, assertive","The diffident student rarely raised her hand.","Surprisingly ___ for someone so talented, the violinist apologized before every solo and insisted others played it better."],
+["digress","verb","to leave the main subject temporarily in speech or writing","stray, wander, deviate","focus, stay on topic","The teacher tends to digress into stories about his cat.","Our history teacher would often ___ from the lesson on the French Revolution to describe, in great detail, his summer in Paris."],
+["discrepancy","noun","a lack of agreement between facts that should match","inconsistency, mismatch, difference","agreement, consistency","Auditors found a discrepancy in the accounts.","Police grew suspicious because of a ___ between the suspect's story, which put him at home at 9 p.m., and the gas-station receipt in his pocket."],
+["disseminate","verb","to spread information widely","spread, circulate, distribute","suppress, withhold","The internet helps disseminate information quickly.","Health officials used radio broadcasts, text messages, and posters in six languages to ___ the vaccination schedule across the region."],
+["divergent","adj","tending to be different or develop in different directions","differing, conflicting, dissimilar","convergent, similar","The two scientists held divergent views.","Although the twins were raised in the same house, they followed wildly ___ paths: one became a monk, the other a stunt pilot."],
+// Set 30
+["dogmatic","adj","inclined to lay down principles as undeniably true","opinionated, rigid, doctrinaire","open-minded, flexible","The dogmatic professor refused to consider other theories.","The ___ coach insisted his 1980s training methods were the only correct ones, dismissing every new study on sports science as nonsense."],
+["duplicity","noun","deceitfulness; double-dealing","deceit, dishonesty, treachery","honesty, candor","The spy's duplicity was finally exposed.","The agent's ___ was astonishing: for ten years he had passed secrets to both governments, each believing he worked only for them."],
+["eclectic","adj","drawing from a wide and diverse range of sources","diverse, varied, wide-ranging","narrow, uniform","Her eclectic music taste ranges from opera to heavy metal.","The restaurant's ___ menu offered Korean tacos, Ethiopian stew, and Italian gelato, all on the same page."],
+["efficacy","noun","the ability to produce a desired or intended result","effectiveness, power, potency","ineffectiveness, uselessness","The trial tested the vaccine's efficacy.","Before approving the drug, regulators demanded proof of its ___, since earlier trials had shown it was safe but not that it actually worked."],
+["egregious","adj","outstandingly bad; shocking","shocking, flagrant, outrageous","minor, slight","The referee made an egregious error.","Of all the mistakes in the report, the most ___ was listing the company's profits as $40 billion instead of $40 million."],
+// Set 31
+["elicit","verb","to draw out a response, answer, or fact from someone","evoke, draw out, provoke","suppress, stifle","The joke failed to elicit a single laugh.","The detective's gentle questions were designed to ___ details the frightened witness might not realize she remembered."],
+["emulate","verb","to match or surpass, typically by imitation","imitate, copy, follow","ignore, diverge from","Young players often emulate their sports heroes.","Hoping to ___ his older sister, who had been valedictorian, Marco began studying every night in the same chair she had used."],
+["endorse","verb","to declare one's public approval or support of","support, back, approve","oppose, reject","The newspaper endorsed the mayor for reelection.","Three former presidents agreed to publicly ___ the reading program, hoping their names would persuade more schools to adopt it."],
+["enervate","verb","to cause someone to feel drained of energy","exhaust, weaken, drain","energize, invigorate","The long hike in the heat enervated the hikers.","Weeks of humid, 100-degree days seemed to ___ the whole town, and even the dogs stopped bothering to bark."],
+["entrenched","adj","firmly established and difficult to change","ingrained, deep-rooted, established","temporary, superficial","Entrenched habits are hard to break.","Reformers underestimated how ___ the old system was: the same families had controlled the town council for over a century."],
+// Set 32
+["equanimity","noun","mental calmness and composure, especially in a difficult situation","composure, calm, poise","agitation, anxiety","She accepted the bad news with equanimity.","The pilot's ___ during the emergency landing reassured passengers; her voice on the intercom never rose above its usual calm tone."],
+["equivocal","adj","open to more than one interpretation, often deliberately; ambiguous","ambiguous, vague, evasive","clear, definite","The politician gave an equivocal answer.","When asked directly whether he would raise taxes, the candidate's reply was deliberately ___: \"We'll do whatever the moment requires.\""],
+["erudite","adj","having or showing great knowledge gained from study","learned, scholarly, knowledgeable","ignorant, uneducated","The erudite professor spoke six languages.","The ___ librarian could discuss medieval Latin poetry, quantum physics, and the history of chess with equal ease."],
+["euphemism","noun","a mild word substituted for one considered too harsh or blunt","understatement, polite term, softening","dysphemism, blunt term","\"Passed away\" is a euphemism for \"died.\"","When the company announced it was \"rightsizing,\" employees recognized the word as a ___ for mass layoffs."],
+["extol","verb","to praise enthusiastically","praise, acclaim, celebrate","criticize, disparage","The coach extolled the team's hard work.","Food critics have begun to ___ the tiny roadside diner, calling its pie the best in the state."],
+// Set 33
+["facetious","adj","treating serious issues with deliberately inappropriate humor","flippant, joking, glib","serious, earnest","His facetious comment at the meeting offended everyone.","When asked how he planned to pay off his loans, Ben gave a ___ reply (\"I'll win the lottery\") that annoyed his worried parents."],
+["fallacy","noun","a mistaken belief, especially one based on unsound argument","misconception, error, myth","truth, fact","It's a fallacy that we use only 10 percent of our brains.","The gambler fell for a common ___, believing that after five losses in a row he was \"due\" for a win."],
+["feasible","adj","possible to do easily or conveniently; practical","practicable, achievable, workable","impossible, impractical","Is it feasible to finish the project by Friday?","The engineers concluded that a bridge across the strait was technically ___ but would cost more than the nation's entire annual budget."],
+["fortuitous","adj","happening by chance, often by lucky chance","lucky, accidental, fortunate","planned, intentional","Our meeting was fortuitous; we both happened to miss the same train.","Penicillin's discovery was ___: Fleming noticed that mold had accidentally contaminated a dish he'd left out while on vacation."],
+["frivolous","adj","not having any serious purpose or value","silly, trivial, flippant","serious, important","The judge dismissed the frivolous lawsuit.","The judge dismissed the lawsuit as ___, noting that the plaintiff was suing a neighbor because his lawn was \"too green.\""],
+// Set 34
+["gratuitous","adj","uncalled for; lacking good reason","unnecessary, unwarranted, needless","justified, necessary","The movie was criticized for gratuitous violence.","Reviewers called the film's explosions ___, since they had nothing to do with the plot and seemed added just to fill the trailer."],
+["hamper","verb","to hinder or impede the movement or progress of","hinder, obstruct, impede","help, facilitate","Heavy snow hampered rescue efforts.","Thick smoke and falling debris continued to ___ firefighters as they searched the building for survivors."],
+["heed","verb","to pay attention to; take notice of","obey, mind, follow","ignore, disregard","Heed the warning signs.","Hikers who fail to ___ the ranger's warnings about afternoon lightning often find themselves stranded above the tree line."],
+["hubris","noun","excessive pride or self-confidence","arrogance, conceit, overconfidence","humility, modesty","The general's hubris led to his defeat.","The shipbuilders' ___ was legendary: they declared the vessel \"practically unsinkable\" and loaded only half the lifeboats it needed."],
+["hypocrisy","noun","claiming moral standards or beliefs that one's own behavior does not follow","insincerity, double standard, pretense","sincerity, honesty","It's hypocrisy to preach recycling and then litter.","Voters were outraged by the senator's ___: he had campaigned against private jets while flying in one to every rally."],
+// Set 35
+["impartial","adj","treating all rivals or sides equally; fair","unbiased, neutral, fair","biased, partisan","A judge must be impartial.","Because the referee's brother played for one of the teams, league officials doubted he could remain ___ and replaced him before kickoff."],
+["implicit","adj","implied though not plainly expressed","implied, unspoken, tacit","explicit, stated","There was an implicit agreement not to discuss politics at dinner.","No rule was ever written down, but the message was ___: freshmen did not sit at the seniors' table."],
+["inadvertent","adj","not resulting from deliberate planning; accidental","accidental, unintentional, unwitting","deliberate, intentional","The error was inadvertent.","The leak was entirely ___: a clerk accidentally hit \"reply all\" on an email meant for one person."],
+["incongruous","adj","not in harmony or keeping with the surroundings; out of place","out of place, inappropriate, discordant","fitting, harmonious","The modern glass building looked incongruous among the old churches.","A tuxedoed pianist playing Chopin looked wonderfully ___ in the middle of the muddy festival, surrounded by punk bands."],
+["indignant","adj","feeling anger at something perceived as unfair","outraged, resentful, offended","pleased, content","She was indignant at being accused of cheating.","The customer grew ___ when the manager suggested that she, not the store's broken scanner, was responsible for the double charge."],
+// Set 36
+["inert","adj","lacking the ability or strength to move; chemically inactive","inactive, motionless, sluggish","active, lively","Helium is an inert gas.","The snake lay ___ on the warm rock for hours, so still that hikers mistook it for a stick."],
+["inevitable","adj","certain to happen; unavoidable","unavoidable, inescapable, certain","avoidable, uncertain","Change is inevitable.","With the star player injured and the team down by thirty, defeat seemed ___, yet the fans refused to leave."],
+["insatiable","adj","impossible to satisfy","unquenchable, voracious, greedy","satisfied, content","She has an insatiable appetite for mystery novels.","The toddler's curiosity was ___: every answer to \"why?\" only produced another \"why?\""],
+["insinuate","verb","to suggest or hint something bad in an indirect way","imply, hint, suggest","state, declare","Are you insinuating that I lied?","Without directly accusing anyone, the coach managed to ___ that someone on the team had leaked the playbook."],
+["intuitive","adj","based on instinct rather than reasoning; easy to use without instruction","instinctive, natural, user-friendly","counterintuitive, confusing","The app's design is so intuitive that no manual is needed.","The new phone's controls were so ___ that my grandmother figured out video calling in five minutes without reading a single instruction."],
+// Set 37
+["juxtapose","verb","to place close together for contrasting effect","contrast, compare, pair","separate, isolate","The exhibit juxtaposes photos of the city in 1900 and today.","The filmmaker chose to ___ scenes of the lavish palace banquet with shots of starving villagers just outside its walls."],
+["lament","verb","to express grief or regret about","mourn, grieve, bemoan","celebrate, rejoice","Fans lament the closing of the old stadium.","Many longtime residents ___ the loss of the town's small shops, which have been replaced by chain stores."],
+["latent","adj","existing but not yet developed or visible","dormant, hidden, potential","active, manifest","The virus can remain latent for years.","The coach believed every player had ___ talent, and that the right drills would bring out abilities they didn't know they had."],
+["lavish","adj","sumptuously rich, elaborate, or luxurious","luxurious, extravagant, opulent","modest, meager","They threw a lavish party with a live orchestra.","The tech company's ___ offices included a climbing wall, a sushi bar, and nap pods with ocean views."],
+["lenient","adj","more merciful or tolerant than expected","tolerant, forgiving, easygoing","strict, harsh","The teacher was lenient about late homework.","Critics argued the judge's sentence was far too ___: the executive who stole millions received only community service."],
+// Set 38
+["loquacious","adj","tending to talk a great deal","talkative, chatty, garrulous","quiet, reticent","The loquacious barber talked through the entire haircut.","The ___ tour guide talked nonstop for three hours, rarely pausing long enough for anyone to ask a question."],
+["meander","verb","to wander aimlessly; to follow a winding course","wander, wind, ramble","go straight, hurry","The river meanders through the valley.","With no deadline and no destination, we let the afternoon ___, drifting from bookstore to café to park bench."],
+["myriad","adj","countless or extremely great in number","countless, innumerable, numerous","few, limited","The reef is home to myriad species of fish.","The coral reef supports ___ forms of life, from microscopic plankton to sharks longer than a car."],
+["nefarious","adj","wicked or criminal","wicked, villainous, sinister","good, virtuous","The villain's nefarious plan was to poison the water supply.","Investigators uncovered the gang's ___ scheme: selling fake cancer medicine to desperate patients."],
+["nostalgia","noun","a sentimental longing for a period in the past","wistfulness, longing, reminiscence","forward-looking outlook","The old song filled him with nostalgia.","Hearing the ice cream truck's jingle filled Grandma with ___ for the summers of her childhood in Brooklyn."],
+// Set 39
+["oblivious","adj","not aware of or concerned about what is happening around one","unaware, unconscious, heedless","aware, attentive","Absorbed in her phone, she was oblivious to the traffic.","Absorbed in his video game, Kai was completely ___ to the smoke drifting from the kitchen until the alarm went off."],
+["ominous","adj","giving the impression that something bad is going to happen","threatening, menacing, foreboding","promising, encouraging","Ominous clouds gathered over the stadium.","The ___ creaking of the old rope bridge made the hikers turn back halfway across."],
+["ostracize","verb","to exclude from a society or group","exclude, shun, banish","include, welcome","The club ostracized members who broke its rules.","In ancient Athens, citizens could vote to ___ a politician they considered dangerous, banishing him from the city for ten years."],
+["perfunctory","adj","carried out with minimum effort, as a routine duty","cursory, careless, halfhearted","thorough, careful","He gave the room a perfunctory cleaning.","The guard gave the bags only a ___ glance, waving everyone through without opening a single suitcase."],
+["peripheral","adj","on the edge; of secondary importance","marginal, minor, outer","central, essential","Focus on the main issue, not peripheral details.","The lawyer argued that the witness's mistake was ___ to the case: whether the car was blue or green didn't change who was driving it."],
+// Set 40
+["plausible","adj","seeming reasonable or probable","believable, credible, reasonable","implausible, unlikely","Her excuse was plausible, so the teacher accepted it.","Detectives found his alibi ___ at first, since dozens of people claimed to have seen him at the concert that night."],
+["poignant","adj","evoking a keen sense of sadness or regret","moving, touching, heartbreaking","unmoving, cheerful","The film ended with a poignant goodbye.","The most ___ item in the museum was a child's shoe recovered from the shipwreck, still tied in a double knot."],
+["proliferate","verb","to increase rapidly in number","multiply, spread, mushroom","decline, dwindle","Food trucks have proliferated downtown.","Once the invasive mussels reached the lake, they began to ___ so quickly that within three years they coated every rock on the shoreline."],
+["provocative","adj","causing anger or strong reaction, especially deliberately","controversial, inflammatory, stimulating","bland, soothing","The artist's provocative painting sparked protests.","The columnist was known for ___ headlines, like \"Homework Should Be Illegal,\" written specifically to stir up angry responses."],
+["reverence","noun","deep respect for someone or something","respect, veneration, awe","contempt, disrespect","They spoke of their grandfather with reverence.","Visitors lowered their voices and removed their hats out of ___ as they entered the ancient temple."],
+];
+
+// Near-synonym groups: never offered as distractors for each other, since both could fit.
+const NEAR = [
+  "mitigate alleviate abate quell placate", "lethargic inert sedentary enervate", "capricious arbitrary volatile whimsical sporadic",
+  "volatile precarious tenuous turbulent", "obstinate tenacious dogmatic entrenched resilient", "rebuke admonish censure disparage",
+  "contempt condescending", "corroborate bolster vindicate", "diligent meticulous fastidious comprehensive", "affable gregarious loquacious",
+  "ostentatious lavish", "frugal austere prudent pragmatic feasible", "reticent diffident", "benevolent altruistic magnanimous benign",
+  "ingenious astute erudite", "skeptical dubious cynical wary", "enigmatic elusive opaque convoluted equivocal", "fervent zealous",
+  "impetuous audacious intrepid", "placid stoic nonchalant equanimity", "trivial frivolous superfluous gratuitous mundane peripheral facetious",
+  "copious prolific myriad", "indifferent apathy nonchalant oblivious complacent", "deter hamper debilitate undermine jeopardize",
+  "coherent lucid cogent plausible eloquent", "ambivalent equivocal tentative", "egregious nefarious callous", "indulgent lenient",
+  "innate intuitive latent implicit", "advocate endorse extol venerate", "reverence deference venerate", "concede relinquish",
+  "digress meander", "disseminate proliferate", "anomaly discrepancy paradox fallacy", "fortuitous inadvertent", "duplicity hypocrisy",
+  "salient conspicuous", "exacerbate antagonize", "despondent poignant",
+];
+
+// ───────────────────────── Data ─────────────────────────
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const POS = { adj: "adjective", verb: "verb", noun: "noun" };
+
+const WORDS = RAW.map((r, i) => ({ w: r[0], pos: r[1], def: r[2], syn: r[3].split(", "), ant: r[4].split(", "), ex: r[5], q: r[6], set: Math.floor(i / 5) + 1, i }));
+const NSETS = Math.ceil(WORDS.length / 5);
+const BY = Object.fromEntries(WORDS.map(w => [w.w, w]));
+const setWords = n => WORDS.filter(w => w.set === n);
+const nearMap = {};
+NEAR.forEach(g => { const ws = g.split(" "); ws.forEach(a => { nearMap[a] = nearMap[a] || new Set(); ws.forEach(b => b !== a && nearMap[a].add(b)); }); });
+const tooClose = (a, b) => a === b || nearMap[a.w]?.has(b.w) || a.syn.includes(b.w) || b.syn.includes(a.w);
+
+function wordRe(w) { const stem = w.length > 5 ? w.slice(0, -2) : w; return new RegExp("\\b" + stem + "[a-z]*", "gi"); }
+const markEx = o => esc(o.ex).replace(wordRe(o.w), m => `<mark class="mark">${m}</mark>`);
+const blankEx = o => esc(o.ex).replace(wordRe(o.w), '<span class="blank"></span>');
+const blankQ = s => esc(s).replace(/_{3,}/, '<span class="blank"></span>');
+
+// ───────────────────────── Dates & progress ─────────────────────────
+const pad = n => String(n).padStart(2, "0");
+const dstr = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const today = () => dstr(new Date());
+const addDays = (s, n) => { const [y, m, d] = s.split("-").map(Number); return dstr(new Date(y, m - 1, d + n)); };
+const daysBetween = (a, b) => Math.round((new Date(b + "T12:00") - new Date(a + "T12:00")) / 864e5);
+const INTERVALS = [1, 3, 7, 14, 30, 60];
+
+const KEY = "fiveaday.v1";
+let S = load();
+function load() {
+  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.sets) return Object.assign({ days: [], miss: {}, best: 0, pick: null }, s); } catch (e) {}
+  return { sets: {}, days: [], miss: {}, best: 0, pick: null };
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+
+const learned = n => !!S.sets[n];
+const learnedSets = () => Object.keys(S.sets).map(Number).sort((a, b) => a - b);
+const dueSets = () => learnedSets().filter(n => S.sets[n].due <= today()).sort((a, b) => S.sets[a].due.localeCompare(S.sets[b].due));
+const nextNew = () => { for (let n = 1; n <= NSETS; n++) if (!learned(n)) return n; return null; };
+const learnedToday = () => learnedSets().filter(n => S.sets[n].learnedAt === today());
+const focusSet = () => learnedToday().slice(-1)[0] || nextNew() || learnedSets().slice(-1)[0] || 1;
+const tricky = () => Object.entries(S.miss).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([w]) => w).filter(w => BY[w]);
+
+function markDay() { const t = today(); if (!S.days.includes(t)) { S.days.push(t); S.days = S.days.slice(-500); } save(); renderStreak(); }
+function streak() { const set = new Set(S.days); let d = today(), n = 0; if (!set.has(d)) d = addDays(d, -1); while (set.has(d)) { n++; d = addDays(d, -1); } return n; }
+function renderStreak() { $("#streakN").textContent = streak(); }
+function addMiss(w) { S.miss[w] = (S.miss[w] || 0) + 1; }
+
+let toastT;
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => (t.hidden = true), 2600); }
+
+// ───────────────────────── Router ─────────────────────────
+let view = "today";
+function go(v) {
+  if (v !== "runner") stopGame();
+  view = v;
+  document.querySelectorAll(".view").forEach(s => (s.hidden = s.id !== "v-" + v));
+  document.querySelectorAll(".nav button").forEach(b => b.dataset.go === v ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current"));
+  if (v === "today") renderToday();
+  if (v === "sets") renderSets();
+  if (v === "tutor") initTutor();
+  if (v === "runner") renderRunnerSetup();
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll(".nav button").forEach(b => b.addEventListener("click", () => go(b.dataset.go)));
+
+// ───────────────────────── Today ─────────────────────────
+function renderToday() {
+  const due = dueSets(), nn = nextNew(), lt = learnedToday(), nl = learnedSets().length;
+  const date = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+  const head = !nn && !due.length ? "You've learned all 200 words." : due.length ? "Refresh first, then five new words." : lt.length ? "Today's five are done." : "Five new words are waiting.";
+  const trick = tricky();
+  let h = `<div class="today-head"><div><div class="eyebrow">${esc(date)}</div><h1>${head}</h1></div>
+    <div class="stats"><div class="stat"><b>${nl * 5}<span style="font-size:15px;color:var(--ink-2)"> / ${WORDS.length}</span></b><span>Words learned</span></div>
+    <div class="stat"><b>${due.length}</b><span>Sets to refresh</span></div><div class="stat"><b>${streak()}</b><span>Day streak</span></div></div></div>
+    <div class="today-grid"><div class="stack">`;
+  if (due.length) {
+    h += `<div class="panel refresh"><div class="eyebrow">Refresh your skills</div><h2>${due.length === 1 ? "One set is" : due.length + " sets are"} due for review</h2>
+      <p class="muted" style="margin:0">Reviewing on schedule is what moves words into long-term memory. Each review pushes the next one further out: 1, 3, 7, 14, 30, then 60 days.</p>
+      <div class="due-list">${due.map(n => { const s = S.sets[n]; const late = daysBetween(s.due, today()); return `<div class="due-item"><b>Set ${n}</b><span class="words">${setWords(n).map(w => w.w).join(" · ")}</span>${late > 0 ? `<span class="pill due">${late}d late</span>` : `<span class="pill due">Due</span>`}<button class="btn sm primary" data-review="${n}">Review</button></div>`; }).join("")}</div>
+      ${due.length > 1 ? `<div class="row" style="margin-top:12px"><button class="btn sm" data-review-all>Review all ${due.length} together</button></div>` : ""}</div>`;
+  }
+  if (nn && !lt.length) {
+    h += `<div class="panel todayset"><div class="eyebrow">Today's set</div><h2>Set ${nn}</h2>
+      <div class="word-preview">${setWords(nn).map(w => `<div class="wp">${esc(w.w)}</div>`).join("")}</div>
+      <div class="row"><button class="btn primary" data-learn="${nn}">Start learning Set ${nn} →</button><span class="muted" style="font-size:14px">About 10 minutes: flashcards, recall, then a hard quiz.</span></div></div>`;
+  } else if (lt.length) {
+    h += `<div class="panel todayset"><div class="eyebrow">Today's set</div><h2>Set ${lt.join(" & ")} learned today</h2>
+      <p class="muted" style="margin:0 0 14px">Nice work. Your first review comes up tomorrow. Play a round of Word Runner to lock the words in.</p>
+      <div class="row"><button class="btn primary" data-run-today>Play with today's words</button>${nn ? `<button class="btn" data-learn="${nn}">Learn Set ${nn} anyway</button>` : ""}</div></div>`;
+  } else if (!nn) {
+    h += `<div class="panel todayset"><div class="eyebrow">All sets learned</div><h2>Keep them sharp</h2><p class="muted" style="margin:0">Your reviews keep coming on schedule. Use a mixed refresh or the runner between them.</p></div>`;
+  }
+  h += `</div><div class="stack"><div class="quick">
+      <button data-mixed ${nl ? "" : "disabled"}><span class="ico">↻</span><div><b>Mixed refresh</b><span>${nl ? "10 random words from sets you've learned" : "Unlocks after your first set"}</span></div></button>
+      <button data-go-runner><span class="ico">▲</span><div><b>Word Runner</b><span>Dodge, jump, and pick the right gate</span></div></button>
+      <button data-tutor-quiz><span class="ico">✎</span><div><b>Quiz me on Set ${focusSet()}</b><span>The AI tutor asks one question at a time</span></div></button>
+    </div>
+    <div class="panel"><div class="eyebrow">Progress</div><div style="margin:10px 0 6px" class="bar"><i style="width:${(nl / NSETS) * 100}%"></i></div>
+      <div class="muted" style="font-size:14px">${nl} of ${NSETS} sets learned${nl ? ` · ${learnedSets().filter(n => S.sets[n].level >= 3).length} sets at 14-day level or higher` : ""}</div></div>
+    <div class="panel"><div class="eyebrow">Your tricky words</div>
+      ${trick.length ? `<div class="tricky">${trick.map(w => `<button class="chip" data-open="${BY[w].set}" style="border:0">${esc(w)}</button>`).join("")}</div>` : `<p class="muted" style="margin:8px 0 0;font-size:14px">Words you miss in recall, quizzes, and the runner collect here.</p>`}</div>
+  </div></div>`;
+  const v = $("#v-today"); v.innerHTML = h;
+  v.querySelectorAll("[data-review]").forEach(b => (b.onclick = () => startSession("review", [+b.dataset.review])));
+  v.querySelector("[data-review-all]")?.addEventListener("click", () => startSession("review", due));
+  v.querySelectorAll("[data-learn]").forEach(b => (b.onclick = () => startSession("learn", [+b.dataset.learn])));
+  v.querySelector("[data-mixed]").onclick = () => startMixed();
+  v.querySelector("[data-go-runner]").onclick = () => go("runner");
+  v.querySelector("[data-run-today]")?.addEventListener("click", () => { S.pick = learnedToday(); save(); go("runner"); });
+  v.querySelector("[data-tutor-quiz]").onclick = () => { go("tutor"); askTutor(`Quiz me on Set ${focusSet()}`); };
+  v.querySelectorAll("[data-open]").forEach(b => (b.onclick = () => { openSet = +b.dataset.open; go("sets"); }));
+}
+function startMixed() {
+  const pool = learnedSets().flatMap(setWords);
+  if (!pool.length) return;
+  const trick = new Set(tricky());
+  const picked = shuffle(pool).sort((a, b) => trick.has(b.w) - trick.has(a.w)).slice(0, 10);
+  startSession("mixed", [], shuffle(picked));
+}
+
+// ───────────────────────── Sets ─────────────────────────
+let openSet = null, query = "";
+function renderSets() {
+  const v = $("#v-sets");
+  v.innerHTML = `<div class="sets-top"><div><div class="eyebrow">${NSETS} sets · ${WORDS.length} words</div><h1>All sets</h1></div>
+    <input class="search" id="setSearch" type="search" placeholder="Search words or meanings" value="${esc(query)}" aria-label="Search words"></div><div id="setBody"></div>`;
+  $("#setSearch").addEventListener("input", e => { query = e.target.value; renderSetBody(); });
+  renderSetBody();
+}
+function setStatus(n) {
+  const s = S.sets[n];
+  if (!s) return n === nextNew() ? `<span class="pill today">Up next</span>` : `<span class="pill new">New</span>`;
+  if (s.due <= today()) return `<span class="pill due">Due</span>`;
+  const d = daysBetween(today(), s.due);
+  return `<span class="pill ok">Review in ${d}d</span>`;
+}
+function renderSetBody() {
+  const b = $("#setBody"), q = query.trim().toLowerCase();
+  if (q) {
+    const hits = WORDS.filter(w => w.w.includes(q) || w.def.toLowerCase().includes(q) || w.syn.some(s => s.includes(q)));
+    b.innerHTML = hits.length ? `<div class="panel table-scroll"><table class="word-table"><tbody>${hits.map(w => `<tr><td>${esc(w.w)}<div class="pos" style="font-size:13px;font-weight:400">${POS[w.pos]}</div></td><td><div class="def">${esc(w.def)}</div><div class="muted" style="font-size:14px">${esc(w.syn.join(", "))}</div></td><td><button class="btn sm" data-open="${w.set}">Set ${w.set}</button></td></tr>`).join("")}</tbody></table></div>` : `<p class="muted">No words match "${esc(query)}".</p>`;
+    b.querySelectorAll("[data-open]").forEach(x => (x.onclick = () => { query = ""; openSet = +x.dataset.open; renderSets(); $("#setDetail")?.scrollIntoView({ block: "start" }); }));
+    return;
+  }
+  let h = `<div class="set-grid">`;
+  for (let n = 1; n <= NSETS; n++) h += `<button class="set-tile" data-set="${n}" aria-pressed="${openSet === n}"><div class="n"><b>Set ${n}</b>${setStatus(n)}</div><div class="w">${setWords(n).map(w => w.w).join(", ")}</div></button>`;
+  h += `</div>`;
+  if (openSet) {
+    const n = openSet, ws = setWords(n), s = S.sets[n];
+    h += `<div class="panel set-detail" id="setDetail"><div class="row" style="justify-content:space-between"><div><div class="eyebrow">${s ? `Learned ${esc(s.learnedAt)} · level ${s.level + 1} of 6` : "Not learned yet"}</div><h2>Set ${n}</h2></div>${setStatus(n)}</div>
+      <div class="table-scroll"><table class="word-table"><tbody>${ws.map(w => `<tr><td>${esc(w.w)}<div class="pos" style="font-size:13px;font-weight:400">${POS[w.pos]}</div></td><td><div class="def">${esc(w.def)}</div><div class="ex muted" style="font-size:15px;margin-top:4px">${markEx(w)}</div></td></tr>`).join("")}</tbody></table></div>
+      <div class="row">${s ? `<button class="btn primary" data-act="review">Review this set</button><button class="btn" data-act="learn">Relearn with flashcards</button>` : `<button class="btn primary" data-act="learn">Learn this set</button>`}
+      <button class="btn" data-act="quiz">Take the set quiz</button><button class="btn" data-act="run">Play in Runner</button><button class="btn" data-act="tutor">Ask the tutor</button></div></div>`;
+  }
+  b.innerHTML = h;
+  b.querySelectorAll("[data-set]").forEach(x => (x.onclick = () => { openSet = openSet === +x.dataset.set ? null : +x.dataset.set; renderSetBody(); if (openSet) $("#setDetail").scrollIntoView({ behavior: "smooth", block: "nearest" }); }));
+  b.querySelectorAll("[data-act]").forEach(x => (x.onclick = () => {
+    const a = x.dataset.act;
+    if (a === "learn") startSession("learn", [openSet]);
+    if (a === "review") startSession("review", [openSet]);
+    if (a === "quiz") startSession("quiz", [openSet]);
+    if (a === "run") { S.pick = [openSet]; save(); go("runner"); }
+    if (a === "tutor") { const n = openSet; go("tutor"); askTutor(`Quiz me on Set ${n}`); }
+  }));
+}
+
+// ───────────────────────── Study sessions ─────────────────────────
+let SES = null;
+const PHASE_LABEL = { cards: "Flashcards", recall: "Recall", quiz: "Quiz" };
+function startSession(kind, sets, override) {
+  const words = override || sets.flatMap(setWords);
+  const phases = kind === "learn" ? ["cards", "recall", "quiz"] : kind === "quiz" ? ["quiz"] : ["recall", "quiz"];
+  SES = { kind, sets, words, phases, pi: 0, firstTry: new Set(), missed: new Set(), right: 0, total: 0 };
+  view = "session";
+  document.querySelectorAll(".view").forEach(s => (s.hidden = s.id !== "v-session"));
+  document.querySelectorAll(".nav button").forEach(b => b.removeAttribute("aria-current"));
+  window.scrollTo(0, 0);
+  startPhase();
+}
+function sessionTitle() {
+  if (SES.kind === "mixed") return "Mixed refresh";
+  const label = { learn: "Learn", review: "Review", quiz: "Quiz" }[SES.kind];
+  return `${label} · Set ${SES.sets.join(", ")}`;
+}
+function sessionTop() {
+  return `<div class="session-top"><button class="btn sm ghost" id="exitSes">✕ Exit</button><h1>${esc(sessionTitle())}</h1>
+    <div class="steps">${SES.phases.map((p, i) => `<span class="${i < SES.pi ? "done" : i === SES.pi ? "on" : ""}">${PHASE_LABEL[p]}</span>`).join("")}</div></div>`;
+}
+function mountSession(inner) {
+  const v = $("#v-session");
+  v.innerHTML = sessionTop() + `<div class="stage">${inner}</div>`;
+  $("#exitSes").onclick = () => { SES = null; go("today"); };
+}
+function startPhase() {
+  const p = SES.phases[SES.pi];
+  if (p === "cards") { SES.ci = 0; SES.typed = SES.words.map(() => false); renderCard(); }
+  if (p === "recall") { SES.queue = shuffle(SES.words); SES.missedNow = new Set(); SES.copy = false; renderRecall(); }
+  if (p === "quiz") { SES.qs = buildQuiz(SES.words); SES.qi = 0; SES.answered = false; renderQuiz(); }
+}
+function nextPhase() { SES.pi++; if (SES.pi >= SES.phases.length) finishSession(); else startPhase(); }
+const norm = s => s.trim().toLowerCase().replace(/\s+/g, " ");
+
+// Phase 1: flashcards with retyping
+function renderCard() {
+  const i = SES.ci, w = SES.words[i], n = SES.words.length;
+  mountSession(`<div class="progress-line"><span>Card ${i + 1} of ${n}</span><span>Type the word, then study the back</span></div>
+    <div class="card-scene"><div class="card" id="card" role="button" tabindex="0" aria-label="Flashcard for ${esc(w.w)}. Press to flip.">
+      <div class="face front"><div class="corner">Set ${w.set} · ${i + 1} of ${n}</div><div><div class="big">${esc(w.w)}</div><div class="pos" style="margin-top:8px;font-size:18px">${POS[w.pos]}</div></div><div class="hint">Click the card to flip it</div></div>
+      <div class="face back"><div class="corner">${esc(w.w)} · ${POS[w.pos]}</div>
+        <div><div class="lbl">Meaning</div><div class="def">${esc(w.def)}</div></div>
+        <div><div class="lbl">Synonyms</div><div class="chips">${w.syn.map(s => `<span class="chip syn">${esc(s)}</span>`).join("")}</div></div>
+        <div><div class="lbl">Antonyms</div><div class="chips">${w.ant.map(s => `<span class="chip ant">${esc(s)}</span>`).join("")}</div></div>
+        <div><div class="lbl">In a sentence</div><div class="ex" style="font-size:17px">${markEx(w)}</div></div>
+      </div></div></div>
+    <div class="typer"><label for="typeIn">Type <b>${esc(w.w)}</b> to lock it in</label><input class="text${SES.typed[i] ? " good" : ""}" id="typeIn" autocomplete="off" autocapitalize="off" spellcheck="false" value="${SES.typed[i] ? esc(w.w) : ""}"><div class="feedback" id="fb"></div></div>
+    <div class="row" style="justify-content:space-between"><button class="btn" id="prevC" ${i ? "" : "disabled"}>← Back</button><button class="btn primary" id="nextC" ${SES.typed[i] ? "" : "disabled"}>${i === n - 1 ? "Start recall →" : "Next card →"}</button></div>`);
+  const card = $("#card"), inp = $("#typeIn"), nx = $("#nextC");
+  const flip = () => card.classList.toggle("flipped");
+  card.onclick = flip;
+  card.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); flip(); } };
+  inp.focus();
+  inp.oninput = () => {
+    if (norm(inp.value) === w.w) {
+      inp.classList.add("good"); SES.typed[i] = true; nx.disabled = false;
+      $("#fb").className = "feedback good"; $("#fb").textContent = "Got it. Read the back, then press Enter.";
+      if (!card.classList.contains("flipped")) card.classList.add("flipped");
+    } else inp.classList.remove("good");
+  };
+  inp.onkeydown = e => { if (e.key === "Enter" && SES.typed[i]) nx.click(); };
+  $("#prevC").onclick = () => { SES.ci--; renderCard(); };
+  nx.onclick = () => { if (SES.ci < n - 1) { SES.ci++; renderCard(); } else nextPhase(); };
+}
+
+// Phase 2: recall by typing from the definition
+function hintFor(w, level) { return w.w.split("").map((c, k) => (k < level ? c : "_")).join(" "); }
+function renderRecall() {
+  const w = SES.queue[0], left = SES.queue.length, n = SES.words.length;
+  SES.hint = 0;
+  mountSession(`<div class="progress-line"><span>${n - new Set(SES.queue.map(x => x.w)).size} of ${n} recalled</span><span>${left} to go</span></div>
+    <div class="prompt-card"><div class="eyebrow">Which word means…</div><div class="def">${esc(w.def)}</div>
+      <div class="ex muted" style="font-size:17px">${blankEx(w)}</div>
+      <div class="muted" style="font-size:14px"><span class="pos">${POS[w.pos]}</span> · <span id="hintTxt">${w.w.length} letters</span></div></div>
+    <div class="typer"><label for="recIn">Type the word</label><input class="text" id="recIn" autocomplete="off" autocapitalize="off" spellcheck="false"><div class="feedback" id="fb"></div></div>
+    <div class="row" style="justify-content:space-between"><button class="btn ghost" id="hintBtn">Show a letter</button><button class="btn primary" id="checkBtn">Check</button></div>`);
+  const inp = $("#recIn"), fb = $("#fb");
+  inp.focus();
+  $("#hintBtn").onclick = () => { SES.hint = Math.min(w.w.length - 1, SES.hint + 1); $("#hintTxt").textContent = hintFor(w, SES.hint); SES.missedNow.add(w.w); inp.focus(); };
+  const check = () => {
+    const v = norm(inp.value);
+    if (!v) return;
+    if (v === w.w) {
+      inp.className = "text good"; inp.disabled = true;
+      if (!SES.missedNow.has(w.w)) SES.firstTry.add(w.w);
+      fb.className = "feedback good"; fb.textContent = SES.copy ? "Now you've typed it. It'll come back once more." : "Correct.";
+      SES.queue.shift(); SES.copy = false;
+      setTimeout(() => (SES.queue.length ? renderRecall() : nextPhase()), SES.missedNow.has(w.w) ? 900 : 550);
+    } else if (!SES.copy) {
+      SES.copy = true; SES.missedNow.add(w.w); SES.missed.add(w.w); addMiss(w.w); save();
+      SES.queue.push(w);
+      inp.className = "text bad"; inp.select();
+      fb.className = "feedback bad"; fb.innerHTML = `Not quite. It's <mark class="mark">${esc(w.w)}</mark>. Type it to continue.`;
+    } else { inp.className = "text bad"; inp.select(); }
+  };
+  $("#checkBtn").onclick = check;
+  inp.onkeydown = e => { if (e.key === "Enter") check(); };
+}
+
+// Phase 3: hard sentence-completion quiz
+function pickDistractors(t, preferred, count) {
+  const ok = x => x !== t && x.pos === t.pos && !tooClose(t, x);
+  const out = [];
+  const add = list => { for (const x of list) { if (out.length >= count) return; if (ok(x) && !out.includes(x)) out.push(x); } };
+  add(shuffle(preferred).slice(0, 2));
+  add(shuffle(WORDS.filter(x => Math.abs(x.set - t.set) <= 6)));
+  add(shuffle(WORDS));
+  return out;
+}
+function buildQuiz(words) { return shuffle(words).map(t => ({ t, choices: shuffle([t, ...pickDistractors(t, words, 3)]) })); }
+function renderQuiz() {
+  const { t, choices } = SES.qs[SES.qi], n = SES.qs.length;
+  SES.answered = false;
+  mountSession(`<div class="progress-line"><span>Question ${SES.qi + 1} of ${n}</span><span>${SES.right} correct so far</span></div>
+    <div class="prompt-card"><div class="eyebrow">Choose the word that best completes the sentence</div><div class="quiz-q">${blankQ(t.q)}</div></div>
+    <div class="choices">${choices.map((c, k) => `<button class="choice" data-k="${k}"><kbd>${k + 1}</kbd>${esc(c.w)}</button>`).join("")}</div>
+    <div id="explain"></div>`);
+  document.querySelectorAll(".choice").forEach(b => (b.onclick = () => answerQuiz(+b.dataset.k)));
+}
+function answerQuiz(k) {
+  if (SES.answered) return;
+  SES.answered = true;
+  const { t, choices } = SES.qs[SES.qi], pick = choices[k], right = pick === t;
+  SES.total++; if (right) SES.right++; else { SES.missed.add(t.w); addMiss(t.w); save(); }
+  document.querySelectorAll(".choice").forEach((b, j) => { b.disabled = true; if (choices[j] === t) b.classList.add("right"); else if (j === k) b.classList.add("wrong"); });
+  $("#explain").innerHTML = `<div class="explain"><b>${right ? "Correct." : "Not this time."}</b> <mark class="mark">${esc(t.w)}</mark> means ${esc(t.def)}.${right ? "" : ` <b>${esc(pick.w)}</b> means ${esc(pick.def)}.`}</div>
+    <div class="row" style="justify-content:flex-end;margin-top:14px"><button class="btn primary" id="qNext">${SES.qi === SES.qs.length - 1 ? "See results →" : "Next question →"}</button></div>`;
+  $("#qNext").focus();
+  $("#qNext").onclick = () => { SES.qi++; if (SES.qi < SES.qs.length) renderQuiz(); else nextPhase(); };
+}
+document.addEventListener("keydown", e => {
+  if (view !== "session" || !SES || SES.phases[SES.pi] !== "quiz" || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+  const k = Number(e.key);
+  if (!SES.answered && k >= 1 && k <= 4) answerQuiz(k - 1);
+});
+
+function finishSession() {
+  const n = SES.words.length, hasRecall = SES.phases.includes("recall");
+  const recallScore = hasRecall ? SES.firstTry.size / n : null;
+  const quizScore = SES.total ? SES.right / SES.total : null;
+  const parts = [recallScore, quizScore].filter(x => x !== null);
+  const score = parts.reduce((a, b) => a + b, 0) / parts.length;
+  let note = "";
+  if (SES.kind === "learn") {
+    SES.sets.forEach(s => {
+      const prev = S.sets[s];
+      S.sets[s] = { learnedAt: prev?.learnedAt || today(), level: 0, due: addDays(today(), 1), last: score };
+    });
+    note = "Your first review of this set is due tomorrow.";
+  } else if (SES.kind === "review") {
+    SES.sets.forEach(s => {
+      const r = S.sets[s]; if (!r) return;
+      r.level = score >= 0.8 ? Math.min(r.level + 1, INTERVALS.length - 1) : 0;
+      r.due = addDays(today(), INTERVALS[r.level]); r.last = score;
+    });
+    const lv = S.sets[SES.sets[0]]?.level ?? 0;
+    note = score >= 0.8 ? `Strong review. Next one in ${INTERVALS[lv]} day${INTERVALS[lv] > 1 ? "s" : ""}.` : "Below 80%, so this set comes back tomorrow. That's how it sticks.";
+  }
+  markDay();
+  const missed = [...SES.missed].map(w => BY[w]);
+  const pct = Math.round(score * 100);
+  const msg = pct >= 90 ? "Excellent." : pct >= 75 ? "Solid work." : pct >= 50 ? "Getting there." : "Tough round. Worth another pass.";
+  const setsForRun = SES.kind === "mixed" ? [...new Set(SES.words.map(w => w.set))] : SES.sets;
+  mountSession(`<div class="panel result"><div class="eyebrow">Session complete</div><div class="score">${pct}%</div><h2 style="font-size:24px">${msg}</h2>
+    <div class="muted">${hasRecall ? `Recall on first try: ${SES.firstTry.size}/${n}` : ""}${hasRecall && SES.total ? " · " : ""}${SES.total ? `Quiz: ${SES.right}/${SES.total}` : ""}</div>
+    ${note ? `<p style="margin:0">${note}</p>` : ""}
+    ${missed.length ? `<div class="review-list"><div class="eyebrow" style="background:none;border:0;padding:0">Words to watch</div>${missed.map(w => `<div><b>${esc(w.w)}</b>: ${esc(w.def)}</div>`).join("")}</div>` : ""}
+    <div class="row" style="justify-content:center"><button class="btn primary" id="rDone">Back to Today</button><button class="btn" id="rRun">Play these in Runner</button>${missed.length ? `<button class="btn" id="rTutor">Ask the tutor about these</button>` : ""}<button class="btn ghost" id="rQuiz">Retake quiz</button></div></div>`);
+  $("#rDone").onclick = () => { SES = null; go("today"); };
+  $("#rRun").onclick = () => { S.pick = setsForRun; save(); go("runner"); };
+  $("#rQuiz").onclick = () => startSession("quiz", SES.sets, SES.kind === "mixed" ? SES.words : null);
+  $("#rTutor")?.addEventListener("click", () => { const ws = missed.map(w => w.w).join(", "); go("tutor"); askTutor(`I keep missing these words: ${ws}. Help me practice them.`); });
+}
+
+// ───────────────────────── AI tutor ─────────────────────────
+let sample = null, sampleReady = false, tutorInit = false, turns = [], tutorCtl = null, tutorBusy = false;
+(async () => {
+  try { sample = window.claude?.use ? await window.claude.use("sample") : null; } catch (e) { sample = null; }
+  sampleReady = true;
+  if (tutorInit) renderTutorAvailability();
+})();
+function wordListText() {
+  let t = "";
+  for (let n = 1; n <= NSETS; n++) t += `Set ${n}: ` + setWords(n).map(w => `${w.w} (${w.pos}) = ${w.def}`).join("; ") + "\n";
+  return t;
+}
+function rules() {
+  const ls = learnedSets(), trick = tricky();
+  return `You are the AI tutor inside "Five a Day", an SAT vocabulary app for high school students. Students learn 5 words a day in numbered sets.
+
+FULL WORD LIST
+${wordListText()}
+STUDENT PROGRESS
+Learned sets: ${ls.length ? ls.join(", ") : "none yet"}. Current set: ${focusSet()}. Words the student often misses: ${trick.length ? trick.join(", ") : "none recorded"}.
+
+HOW TO TUTOR
+- When asked to quiz on a set ("quiz me on set 5"), use only that set's words. Ask ONE question at a time and wait for the answer. Vary the format: hard SAT-style sentence completions with strong but indirect context clues and four choices labeled A-D; "use this word in a sentence"; synonym or antonym; and "which word fits better" between near-synonyms. After each answer, say whether it's right, explain in one or two sentences, then ask the next question. After five questions, give a score out of 5.
+- When the student writes a sentence using a word, judge whether the word is used correctly and naturally, point out any problem, and offer a stronger version.
+- Keep replies under 120 words, warm and direct. Put vocabulary words in **bold**. No headings. Never reveal an answer before the student tries.
+- If the student asks about a word not on the list, help anyway.`;
+}
+function md(s) {
+  let h = esc(s).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/(^|[^*])\*(?!\s)(.+?)\*/g, "$1<em>$2</em>");
+  const lines = h.split("\n"); let out = "", inList = false;
+  for (const l of lines) {
+    const m = l.match(/^\s*[-•]\s+(.*)/);
+    if (m) { if (!inList) { out += "<ul>"; inList = true; } out += `<li>${m[1]}</li>`; }
+    else { if (inList) { out += "</ul>"; inList = false; } out += l + "<br>"; }
+  }
+  if (inList) out += "</ul>";
+  return out.replace(/(<br>)+$/, "");
+}
+function bubble(cls, html) { const d = document.createElement("div"); d.className = "msg " + cls; d.innerHTML = html; $("#thread").appendChild(d); $("#thread").scrollTop = 1e9; return d; }
+function initTutor() {
+  const cur = focusSet(), trick = tricky(), ls = learnedSets();
+  let pair = ["mitigate", "alleviate"];
+  for (const g of NEAR) { const ws = g.split(" ").filter(w => BY[w] && learned(BY[w].set)); if (ws.length >= 2) { pair = ws.slice(0, 2); break; } }
+  const prompts = [
+    [`Quiz me on Set ${cur}`, true],
+    [ls.length > 1 ? "Quiz me on everything I've learned so far" : `Give me one really hard fill-in-the-blank from Set ${cur}`, true],
+    [`What's the difference between ${pair[0]} and ${pair[1]}?`, true],
+    [trick.length ? `Help me practice my tricky words: ${trick.slice(0, 5).join(", ")}` : `Use each word from Set ${cur} in a sentence about sports`, true],
+    [`Check my sentence: `, false],
+  ];
+  $("#tutorPrompts").innerHTML = prompts.map(([p, send], k) => `<button data-k="${k}">${esc(send ? p : "Check a sentence I wrote…")}</button>`).join("");
+  $("#tutorPrompts").querySelectorAll("button").forEach(b => (b.onclick = () => { const [p, send] = prompts[+b.dataset.k]; if (send) askTutor(p); else { const c = $("#chatIn"); c.value = p; c.focus(); c.setSelectionRange(p.length, p.length); } }));
+  const sel = $("#genSet");
+  sel.innerHTML = Array.from({ length: NSETS }, (_, i) => `<option value="${i + 1}" ${i + 1 === cur ? "selected" : ""}>Set ${i + 1}${learned(i + 1) ? " ✓" : ""}</option>`).join("");
+  if (!tutorInit) {
+    tutorInit = true;
+    bubble("bot", md(`Hi! I'm your vocab tutor. I know all ${WORDS.length} words and which sets you've learned. Say **quiz me on set ${cur}**, paste a sentence you wrote, or ask me to untangle two similar words.`));
+    renderTutorAvailability();
+  }
+}
+function renderTutorAvailability() {
+  if (!sampleReady) return;
+  if (!sample) {
+    if (!$("#thread .note-off")) bubble("note note-off", "The tutor needs Claude, which isn't available in this view. Open this page inside Claude to chat and generate quizzes. Everything else works here.");
+    $("#chatIn").disabled = $("#sendBtn").disabled = $("#genBtn").disabled = true;
+  }
+}
+function errCopy(e) {
+  const c = e?.code;
+  if (["not_granted", "sampling_disabled", "not_declared", "capability_disabled", "capability_removed"].includes(c)) { sample = null; renderTutorAvailability(); return "The tutor isn't allowed in this view, so it's turned off for now. Reload the page if you change your mind."; }
+  if (c === "rate_limited") return "Too many requests right now. Wait a minute, then send again.";
+  if (c === "session_expired") return "You've been signed out of Claude. Sign in again, then resend.";
+  if (c === "refused") return "The tutor couldn't answer that one. Try asking a different way.";
+  if (c === "invalid_json") return "That quiz came back garbled. Press the button again for a fresh one.";
+  return "The connection dropped. Send your message again.";
+}
+function setBusy(b) { tutorBusy = b; $("#sendBtn").hidden = b; $("#stopBtn").hidden = !b; $("#genBtn").disabled = b || !sample; }
+async function askTutor(text) {
+  text = text.trim();
+  if (!text || tutorBusy) return;
+  if (!sampleReady) { toast("The tutor is still starting. Try again in a second."); return; }
+  if (!sample) { renderTutorAvailability(); return; }
+  bubble("me", esc(text));
+  turns.push({ role: "user", content: text });
+  const out = bubble("bot thinking", "Thinking…");
+  tutorCtl = new AbortController(); setBusy(true);
+  try {
+    const { text: ans } = await sample([{ role: "user", content: rules() }, ...turns.slice(-16)], {
+      cache: false, modelTier: "quick", signal: tutorCtl.signal,
+      onText: ({ text }) => { out.classList.remove("thinking"); out.innerHTML = md(text); $("#thread").scrollTop = 1e9; },
+    });
+    out.innerHTML = md(ans);
+    turns.push({ role: "assistant", content: ans });
+  } catch (e) {
+    out.classList.remove("thinking");
+    if (e?.text) { out.innerHTML = md(e.text); turns.push({ role: "assistant", content: e.text }); } else out.remove();
+    if (e?.code !== "cancelled") bubble("note", esc(errCopy(e)));
+  } finally { setBusy(false); }
+}
+$("#composer").addEventListener("submit", e => { e.preventDefault(); const c = $("#chatIn"); const v = c.value; c.value = ""; askTutor(v); });
+$("#chatIn").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("#composer").requestSubmit(); } });
+$("#stopBtn").onclick = () => tutorCtl?.abort();
+$("#genBtn").onclick = async () => {
+  if (!sample || tutorBusy) return;
+  const n = +$("#genSet").value, ws = setWords(n);
+  const pool = shuffle(WORDS.filter(w => w.set !== n && Math.abs(w.set - n) <= 8)).slice(0, 30);
+  bubble("me", esc(`Make me a hard fill-in quiz on Set ${n}`));
+  const out = bubble("bot thinking", "Writing five questions…");
+  tutorCtl = new AbortController(); setBusy(true);
+  try {
+    const data = await sample.json(`Write 5 difficult SAT-style sentence-completion questions, one for each of these target words:
+${ws.map(w => `- ${w.w} (${w.pos}): ${w.def}`).join("\n")}
+
+Rules:
+- Each sentence has exactly one blank written as "____", where the target word fits exactly as written above (base form, no added endings).
+- Use strong but indirect context clues, like the Digital SAT: the reader should have to understand the meaning, not just grammar. Don't reuse these example sentences: ${ws.map(w => JSON.stringify(w.q)).join(" ")}
+- Give 4 choices: the target word plus 3 distractors of the same part of speech drawn from this list: ${pool.map(w => `${w.w} (${w.pos})`).join(", ")}. Distractors must clearly NOT fit the sentence.
+- "explanation" is one or two sentences on why the answer fits and what clue gives it away.
+Reply with only a JSON array: [{"sentence": "...____...", "choices": ["w1","w2","w3","w4"], "answer": "w1", "explanation": "..."}]`, { modelTier: "default", cache: false, signal: tutorCtl.signal });
+    const qs = (Array.isArray(data) ? data : []).filter(q => q && typeof q.sentence === "string" && Array.isArray(q.choices) && q.choices.length >= 2 && q.choices.includes(q.answer)).slice(0, 5);
+    out.remove();
+    if (!qs.length) { bubble("note", "That quiz came back incomplete. Press the button again for a fresh one."); return; }
+    renderGenQuiz(n, qs);
+  } catch (e) {
+    out.remove();
+    if (e?.code !== "cancelled") bubble("note", esc(errCopy(e)));
+  } finally { setBusy(false); }
+};
+function renderGenQuiz(n, qs) {
+  const box = document.createElement("div"); box.className = "gen-quiz"; $("#thread").appendChild(box);
+  let i = 0, right = 0;
+  const show = () => {
+    const q = qs[i];
+    box.innerHTML = `<div class="progress-line"><span>Set ${n} quiz · ${i + 1} of ${qs.length}</span><span>${right} correct</span></div><div class="quiz-q">${esc(q.sentence).replace(/_{3,}/, '<span class="blank"></span>')}</div>
+      <div class="choices">${q.choices.map((c, k) => `<button class="choice" data-k="${k}">${esc(c)}</button>`).join("")}</div><div class="gq-ex"></div>`;
+    box.querySelectorAll(".choice").forEach(b => (b.onclick = () => {
+      const pick = q.choices[+b.dataset.k], ok = pick === q.answer;
+      if (ok) right++; else if (BY[q.answer]) { addMiss(q.answer); save(); }
+      box.querySelectorAll(".choice").forEach((x, j) => { x.disabled = true; if (q.choices[j] === q.answer) x.classList.add("right"); else if (x === b) x.classList.add("wrong"); });
+      box.querySelector(".gq-ex").innerHTML = `<div class="explain">${md(String(q.explanation || ""))}</div><div class="row" style="justify-content:flex-end;margin-top:10px"><button class="btn sm primary">${i < qs.length - 1 ? "Next →" : "Finish"}</button></div>`;
+      box.querySelector(".gq-ex button").onclick = () => { i++; if (i < qs.length) show(); else { box.innerHTML = `<div class="eyebrow">Set ${n} quiz</div><div style="font-family:var(--f-display);font-size:28px;font-weight:800">${right} / ${qs.length}</div><div class="muted">${right === qs.length ? "Perfect score." : "Missed words were added to your tricky list."}</div>`; markDay(); } $("#thread").scrollTop = 1e9; };
+      $("#thread").scrollTop = 1e9;
+    }));
+    $("#thread").scrollTop = 1e9;
+  };
+  show();
+}
+
+// ───────────────────────── Word Runner ─────────────────────────
+let pick = new Set();
+function renderRunnerSetup() {
+  $("#runnerSetup").hidden = false; $("#runnerGame").hidden = true;
+  const init = S.pick && S.pick.length ? S.pick : learnedToday().length ? learnedToday() : learnedSets().length ? learnedSets().slice(-3) : [focusSet()];
+  pick = new Set(init);
+  const g = $("#pickGrid");
+  g.innerHTML = Array.from({ length: NSETS }, (_, i) => `<label class="${learned(i + 1) ? "learned" : ""}" title="${setWords(i + 1).map(w => w.w).join(", ")}"><input type="checkbox" value="${i + 1}" ${pick.has(i + 1) ? "checked" : ""}>${i + 1}</label>`).join("");
+  g.querySelectorAll("input").forEach(c => (c.onchange = () => { c.checked ? pick.add(+c.value) : pick.delete(+c.value); syncPick(); }));
+  syncPick();
+  $("#bestScore").textContent = S.best || 0;
+}
+function syncPick() {
+  $("#pickGrid").querySelectorAll("input").forEach(c => (c.checked = pick.has(+c.value)));
+  $("#pickCount").textContent = pick.size ? `· ${pick.size} set${pick.size > 1 ? "s" : ""}, ${pick.size * 5} words` : "· none picked";
+  S.pick = [...pick]; save();
+}
+$("#pickToday").onclick = () => { pick = new Set([focusSet()]); syncPick(); };
+$("#pickLearned").onclick = () => { const l = learnedSets(); if (!l.length) { toast("You haven't learned a set yet. Start with today's set."); return; } pick = new Set(l); syncPick(); };
+$("#pickClear").onclick = () => { pick = new Set(); syncPick(); };
+$("#startRun").onclick = () => { if (!pick.size) { toast("Pick at least one set to play."); return; } startGame(); };
+$("#quitRun").onclick = () => { stopGame(); renderRunnerSetup(); };
+
+const cv = $("#game"), cx = cv.getContext("2d");
+let W = 0, H = 0, G = null, raf = 0;
+const C = { sky1: "#070818", sky2: "#1B1446", road: "#12163A", side: "#0A0C26", grid: "rgba(97,120,255,.28)", lane: "#FFE45C", text: "#F3F1FF", dim: "#A9A6D6", good: "#3CE39B", bad: "#FF5D78", bar: "#FF5D78", star: "#FFE45C" };
+const SPAWN = 80, GAP = 58, PZ = 1.6, DEPTH = 7;
+
+function sizeCanvas() {
+  const w = $("#gameWrap").clientWidth || 800;
+  const h = Math.round(Math.min(620, Math.max(460, w * 0.66)));
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); cv.style.height = h + "px";
+  W = w; H = h; cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+window.addEventListener("resize", () => { if (G) sizeCanvas(); });
+
+function startGame() {
+  $("#runnerSetup").hidden = true; $("#runnerGame").hidden = false;
+  sizeCanvas();
+  const pool = [...pick].sort((a, b) => a - b).flatMap(setWords);
+  const clue = document.querySelector('input[name="clue"]:checked').value;
+  const mode = document.querySelector('input[name="mode"]:checked').value;
+  G = { pool, deck: [], clue, mode, lane: 1, x: 1, jumpT: -1, objs: [], dist: 0, nextGate: 14, nextBits: 30, speed: 11, score: 0, combo: 0, lives: 3, time: 90, inv: 0,
+        shake: 0, parts: [], floats: [], results: [], state: "count", count: 3, runT: 0, flash: null, last: performance.now() };
+  $("#gameOverlay").hidden = true;
+  cancelAnimationFrame(raf); raf = requestAnimationFrame(loop);
+  $("#gameWrap").scrollIntoView({ behavior: "smooth", block: "center" });
+}
+function stopGame() { cancelAnimationFrame(raf); raf = 0; G = null; }
+
+function drawWord() {
+  if (!G.deck.length) G.deck = shuffle(G.pool);
+  return G.deck.pop();
+}
+function spawnGate() {
+  const t = drawWord();
+  const same = G.pool.filter(x => x !== t && !tooClose(t, x));
+  let opts = shuffle(same.filter(x => x.pos === t.pos)).slice(0, 2);
+  if (opts.length < 2) opts = opts.concat(shuffle(same.filter(x => !opts.includes(x)))).slice(0, 2);
+  if (opts.length < 2) opts = opts.concat(pickDistractors(t, [], 2 - opts.length));
+  const words = shuffle([t, ...opts]);
+  G.objs.push({ type: "gate", z: SPAWN, words, correct: words.indexOf(t), t, done: false });
+}
+function spawnBits() {
+  const lane = Math.floor(Math.random() * 3);
+  if (Math.random() < 0.7) G.objs.push({ type: "bar", z: SPAWN, lane, hit: false });
+  const sl = (lane + 1 + Math.floor(Math.random() * 2)) % 3;
+  for (let k = 0; k < 3; k++) G.objs.push({ type: "star", z: SPAWN + k * 2.2, lane: sl, got: false });
+}
+const nearestGate = () => G.objs.filter(o => o.type === "gate" && !o.done).sort((a, b) => a.z - b.z)[0];
+
+function clueText(t) {
+  if (G.clue === "sent") return t.q.replace(/_{3,}/, "_____");
+  if (G.clue === "syn") return "Synonyms: " + t.syn.join(", ");
+  return t.def;
+}
+
+function loop(now) {
+  if (!G) return;
+  const dt = Math.min(0.05, (now - G.last) / 1000); G.last = now;
+  update(dt); draw();
+  raf = requestAnimationFrame(loop);
+}
+function update(dt) {
+  G.shake = Math.max(0, G.shake - dt * 30);
+  G.floats.forEach(f => (f.t += dt)); G.floats = G.floats.filter(f => f.t < 1.1);
+  G.parts.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 600 * dt; p.t += dt; }); G.parts = G.parts.filter(p => p.t < 0.8);
+  if (G.state === "count") { G.count -= dt; if (G.count <= 0) G.state = "run"; return; }
+  if (G.state !== "run") return;
+  G.runT += dt;
+  G.x += (G.lane - G.x) * Math.min(1, dt * 14);
+  if (G.jumpT >= 0) { G.jumpT += dt; if (G.jumpT > 0.62) G.jumpT = -1; }
+  G.inv = Math.max(0, G.inv - dt);
+  if (G.mode === "sprint") { G.time -= dt; if (G.time <= 0) { G.time = 0; return endGame(); } }
+  const dz = G.speed * dt;
+  G.dist += dz;
+  G.objs.forEach(o => (o.z -= dz));
+  G.nextGate -= dz; G.nextBits -= dz;
+  if (G.nextGate <= 0) { spawnGate(); G.nextGate += GAP; }
+  if (G.nextBits <= 0) { spawnBits(); G.nextBits += GAP; }
+  const laneNow = Math.round(G.x), air = jumpH() > 0.35;
+  for (const o of G.objs) {
+    if (o.type === "gate" && !o.done && o.z <= PZ) resolveGate(o);
+    if (o.type === "bar" && !o.hit && o.z <= PZ + 0.5 && o.z > PZ - 0.9 && o.lane === laneNow && !air && G.inv <= 0) {
+      o.hit = true; G.inv = 1.2; G.shake = 10; G.combo = 0;
+      if (G.mode === "survive") G.lives--; else G.time = Math.max(0, G.time - 4);
+      G.floats.push({ text: G.mode === "survive" ? "Ouch! −1 life" : "Ouch! −4s", color: C.bad, t: 0 });
+      if (G.lives <= 0) return endGame();
+    }
+    if (o.type === "star" && !o.got && Math.abs(o.z - PZ) < 0.8 && o.lane === laneNow) { o.got = true; G.score += 10; burst(C.star, 6); }
+  }
+  G.objs = G.objs.filter(o => o.z > -4);
+}
+function resolveGate(o) {
+  o.done = true;
+  const lane = G.lane, ok = lane === o.correct;
+  o.picked = lane;
+  G.results.push({ w: o.t, ok });
+  if (ok) {
+    G.combo++;
+    const mult = Math.min(5, 1 + Math.floor(G.combo / 3));
+    G.score += 100 * mult; G.speed = Math.min(24, G.speed + 0.35);
+    if (G.mode === "sprint") G.time += 2;
+    G.floats.push({ text: `+${100 * mult}  ${o.t.w}${mult > 1 ? `  ×${mult}` : ""}`, color: C.good, t: 0 });
+    burst(C.good, 18);
+  } else {
+    G.combo = 0; G.shake = 12; addMiss(o.t.w); save();
+    if (G.mode === "survive") G.lives--; else G.time = Math.max(0, G.time - 5);
+    G.floats.push({ text: `It was “${o.t.w}”`, color: C.bad, t: 0 });
+    G.flash = { t: o.t, until: G.runT + 2.2 };
+    if (G.lives <= 0) endGame();
+  }
+}
+function burst(color, n) {
+  const p = playerPos();
+  for (let k = 0; k < n; k++) { const a = Math.random() * Math.PI * 2, s = 120 + Math.random() * 220; G.parts.push({ x: p.x, y: p.y - 40, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 180, t: 0, color }); }
+}
+function endGame() {
+  G.state = "over";
+  const best = Math.max(S.best || 0, G.score), isBest = G.score > (S.best || 0) && G.score > 0;
+  S.best = best; save(); markDay();
+  const right = G.results.filter(r => r.ok).length, missed = [...new Map(G.results.filter(r => !r.ok).map(r => [r.w.w, r.w])).values()];
+  const ov = $("#gameOverlay");
+  ov.innerHTML = `<div style="display:grid;gap:12px;justify-items:center"><h2>${G.mode === "sprint" ? "Time!" : "Game over"}</h2>
+    <div class="big">${G.score.toLocaleString()}</div><div>${isBest ? "New best score!" : `Best: ${best.toLocaleString()}`} · ${right} of ${G.results.length} gates correct</div>
+    ${missed.length ? `<div class="missed"><div style="background:none;padding:0;color:#FFE45C;font-weight:700">Review these</div>${missed.map(w => `<div><b>${esc(w.w)}</b>: ${esc(w.def)}</div>`).join("")}</div>` : ""}
+    <div class="row" style="justify-content:center"><button class="btn" id="again">Play again</button><button class="btn ghost" id="toSetup">Change sets</button></div></div>`;
+  ov.hidden = false;
+  $("#again").onclick = () => startGame();
+  $("#toSetup").onclick = () => { stopGame(); renderRunnerSetup(); };
+  $("#again").focus();
+}
+function togglePause() {
+  if (!G || G.state === "over" || G.state === "count") return;
+  const ov = $("#gameOverlay");
+  if (G.state === "run") {
+    G.state = "pause";
+    ov.innerHTML = `<div style="display:grid;gap:12px;justify-items:center"><h2>Paused</h2><button class="btn" id="resume">Resume</button></div>`;
+    ov.hidden = false; $("#resume").onclick = togglePause; $("#resume").focus();
+  } else { G.state = "run"; G.last = performance.now(); ov.hidden = true; }
+}
+document.addEventListener("visibilitychange", () => { if (document.hidden && G && G.state === "run") togglePause(); });
+
+// Controls
+function move(d) { if (G && G.state === "run") G.lane = Math.max(0, Math.min(2, G.lane + d)); }
+function jump() { if (G && G.state === "run" && G.jumpT < 0) G.jumpT = 0; }
+document.addEventListener("keydown", e => {
+  if (!G || view !== "runner" || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+  const k = e.key;
+  if (k === "ArrowLeft" || k === "a" || k === "A") { move(-1); e.preventDefault(); }
+  else if (k === "ArrowRight" || k === "d" || k === "D") { move(1); e.preventDefault(); }
+  else if (k === "ArrowUp" || k === "w" || k === "W" || (k === " " && G.state === "run")) { jump(); e.preventDefault(); }
+  else if (k === "p" || k === "P" || (k === "Escape" && G.state !== "over")) { togglePause(); e.preventDefault(); }
+});
+let ptr = null;
+cv.addEventListener("pointerdown", e => { ptr = { x: e.clientX, y: e.clientY }; });
+cv.addEventListener("pointerup", e => {
+  if (!ptr) return;
+  const dx = e.clientX - ptr.x, dy = e.clientY - ptr.y; ptr = null;
+  if (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy)) move(dx > 0 ? 1 : -1);
+  else if (dy < -30) jump();
+  else { const r = cv.getBoundingClientRect(), fx = (e.clientX - r.left) / r.width; if (fx < 0.33) move(-1); else if (fx > 0.67) move(1); else jump(); }
+});
+[["#tpL", () => move(-1)], ["#tpR", () => move(1)], ["#tpJ", jump]].forEach(([s, f]) => $(s).addEventListener("pointerdown", e => { e.preventDefault(); f(); }));
+
+// Projection
+const horizon = () => H * 0.42;
+const groundY = () => H - 14;
+const scaleAt = z => DEPTH / (DEPTH + Math.max(z, -DEPTH + 0.5));
+const yAt = z => horizon() + (groundY() - horizon()) * scaleAt(z);
+const halfW = z => Math.min(W * 0.47, 440) * scaleAt(z);
+const laneX = (l, z) => W / 2 + (l - 1) * halfW(z) * (2 / 3);
+const jumpH = () => (G.jumpT < 0 ? 0 : Math.sin((G.jumpT / 0.62) * Math.PI));
+function playerPos() { const s = scaleAt(PZ); return { x: laneX(G.x, PZ), y: yAt(PZ) - jumpH() * 110 * s, s }; }
+
+function wrap(text, maxW) {
+  const words = text.split(" "), lines = []; let line = "";
+  for (const w of words) { const t = line ? line + " " + w : w; if (cx.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t; }
+  if (line) lines.push(line);
+  return lines;
+}
+function rr(x, y, w, h, r) { cx.beginPath(); cx.roundRect ? cx.roundRect(x, y, w, h, r) : cx.rect(x, y, w, h); }
+
+function draw() {
+  const hz = horizon();
+  cx.save();
+  if (G.shake > 0) cx.translate((Math.random() - 0.5) * G.shake, (Math.random() - 0.5) * G.shake);
+  // sky
+  const sky = cx.createLinearGradient(0, 0, 0, hz); sky.addColorStop(0, C.sky1); sky.addColorStop(1, C.sky2);
+  cx.fillStyle = sky; cx.fillRect(-20, -20, W + 40, hz + 20);
+  // city skyline of letters
+  cx.fillStyle = "rgba(129,151,255,.16)";
+  for (let k = 0; k < 18; k++) { const bw = W / 18, bh = 18 + ((k * 37) % 50); cx.fillRect(k * bw + 2, hz - bh, bw - 4, bh); }
+  const glow = cx.createLinearGradient(0, hz - 30, 0, hz + 6); glow.addColorStop(0, "rgba(255,228,92,0)"); glow.addColorStop(1, "rgba(255,228,92,.35)");
+  cx.fillStyle = glow; cx.fillRect(0, hz - 30, W, 36);
+  // ground
+  cx.fillStyle = C.side; cx.fillRect(-20, hz, W + 40, H - hz + 20);
+  cx.strokeStyle = C.grid; cx.lineWidth = 1;
+  const off = G.dist % 4;
+  for (let z = 4 - off; z < SPAWN; z += 4) { const y = yAt(z); cx.beginPath(); cx.moveTo(0, y); cx.lineTo(W, y); cx.stroke(); }
+  for (let k = -8; k <= 8; k++) { cx.beginPath(); cx.moveTo(W / 2 + k * W * 0.02, hz); cx.lineTo(W / 2 + k * W * 0.35, H); cx.stroke(); }
+  // road
+  cx.fillStyle = C.road; cx.beginPath();
+  cx.moveTo(W / 2 - halfW(SPAWN), yAt(SPAWN)); cx.lineTo(W / 2 + halfW(SPAWN), yAt(SPAWN)); cx.lineTo(W / 2 + halfW(-3), yAt(-3)); cx.lineTo(W / 2 - halfW(-3), yAt(-3)); cx.fill();
+  cx.strokeStyle = C.lane; cx.lineWidth = 2;
+  [-1, 1].forEach(sd => { cx.beginPath(); cx.moveTo(W / 2 + sd * halfW(SPAWN), yAt(SPAWN)); cx.lineTo(W / 2 + sd * halfW(-3), yAt(-3)); cx.stroke(); });
+  for (let z = -2 - (G.dist % 5); z < SPAWN; z += 5) {
+    [0.5, 1.5].forEach(l => { const x1 = laneX(l, z), x2 = laneX(l, z + 2.2); cx.lineWidth = Math.max(1, 5 * scaleAt(z)); cx.beginPath(); cx.moveTo(x1, yAt(z)); cx.lineTo(x2, yAt(z + 2.2)); cx.stroke(); });
+  }
+  // objects, far to near
+  const objs = G.objs.slice().sort((a, b) => b.z - a.z);
+  const pz = PZ;
+  let playerDrawn = false;
+  for (const o of objs) {
+    if (!playerDrawn && o.z < pz) { drawPlayer(); playerDrawn = true; }
+    if (o.type === "gate") drawGate(o);
+    else if (o.type === "bar" && !o.hit) drawBar(o);
+    else if (o.type === "star" && !o.got) drawStar(o);
+  }
+  if (!playerDrawn) drawPlayer();
+  // particles
+  G.parts.forEach(p => { cx.globalAlpha = 1 - p.t / 0.8; cx.fillStyle = p.color; cx.fillRect(p.x - 3, p.y - 3, 6, 6); }); cx.globalAlpha = 1;
+  cx.restore();
+  drawHUD();
+}
+function drawGate(o) {
+  if (o.z < -1.5) return;
+  const s = scaleAt(o.z), y = yAt(o.z), lw = halfW(o.z) * (2 / 3);
+  const pw = lw * 0.9, ph = Math.max(10, lw * 0.34), top = y - lw * 0.95;
+  for (let l = 0; l < 3; l++) {
+    const x = laneX(l, o.z);
+    let border = C.lane, fill = "rgba(20,24,70,.82)";
+    if (o.done) { if (l === o.correct) { border = C.good; fill = "rgba(20,110,70,.85)"; } else if (l === o.picked) { border = C.bad; fill = "rgba(120,20,40,.85)"; } else { border = "rgba(255,255,255,.2)"; } }
+    cx.strokeStyle = border; cx.lineWidth = Math.max(1, 3 * s);
+    cx.beginPath(); cx.moveTo(x - pw / 2, y); cx.lineTo(x - pw / 2, top + ph); cx.moveTo(x + pw / 2, y); cx.lineTo(x + pw / 2, top + ph); cx.stroke();
+    cx.fillStyle = fill; rr(x - pw / 2, top, pw, ph, 4 * s); cx.fill(); cx.stroke();
+    const fs = Math.min(34, pw / Math.max(6, o.words[l].w.length) * 1.55);
+    if (fs >= 6) { cx.fillStyle = C.text; cx.font = `700 ${fs}px "Bricolage Grotesque", system-ui, sans-serif`; cx.textAlign = "center"; cx.textBaseline = "middle"; cx.fillText(o.words[l].w, x, top + ph / 2 + 1); }
+  }
+}
+function drawBar(o) {
+  const s = scaleAt(o.z), y = yAt(o.z), lw = halfW(o.z) * (2 / 3), x = laneX(o.lane, o.z);
+  const w = lw * 0.82, h = Math.max(3, lw * 0.22);
+  cx.fillStyle = C.bar; rr(x - w / 2, y - h, w, h, 3 * s); cx.fill();
+  cx.fillStyle = "rgba(255,255,255,.85)";
+  for (let k = 0; k < 4; k++) { const sx = x - w / 2 + (k + 0.25) * (w / 4); cx.beginPath(); cx.moveTo(sx, y - h); cx.lineTo(sx + w / 8, y - h); cx.lineTo(sx + w / 16, y); cx.lineTo(sx - w / 16, y); cx.fill(); }
+}
+function drawStar(o) {
+  const s = scaleAt(o.z), y = yAt(o.z) - halfW(o.z) * 0.18, x = laneX(o.lane, o.z), r = Math.max(2, 22 * s * (W / 900 + 0.4));
+  cx.fillStyle = C.star; cx.beginPath();
+  const rot = G.runT * 3;
+  for (let k = 0; k < 10; k++) { const a = rot + (k * Math.PI) / 5, rad = k % 2 ? r * 0.45 : r; cx.lineTo(x + Math.cos(a) * rad, y + Math.sin(a) * rad); }
+  cx.fill();
+}
+function drawPlayer() {
+  const p = playerPos(), s = p.s * Math.min(1.25, Math.max(0.8, W / 800));
+  if (G.inv > 0 && Math.floor(G.inv * 12) % 2) return;
+  const gy = yAt(PZ);
+  cx.fillStyle = "rgba(0,0,0,.45)"; cx.beginPath(); cx.ellipse(p.x, gy, 26 * s * (1 - jumpH() * 0.4), 7 * s, 0, 0, Math.PI * 2); cx.fill();
+  const ph = G.runT * 14, air = G.jumpT >= 0, sw = air ? 0.6 : Math.sin(ph);
+  const hip = { x: p.x, y: p.y - 42 * s }, neck = { x: p.x + 4 * s, y: p.y - 78 * s };
+  cx.lineCap = "round"; cx.strokeStyle = "#FFFFFF"; cx.lineWidth = 9 * s;
+  const limb = (o, a, len1, len2, bend) => { const k = { x: o.x + Math.sin(a) * len1, y: o.y + Math.cos(a) * len1 }; const e = { x: k.x + Math.sin(a + bend) * len2, y: k.y + Math.cos(a + bend) * len2 }; cx.beginPath(); cx.moveTo(o.x, o.y); cx.lineTo(k.x, k.y); cx.lineTo(e.x, e.y); cx.stroke(); };
+  cx.strokeStyle = "#8197FF"; limb(hip, -sw * 0.9, 22 * s, 22 * s, air ? -1.2 : Math.max(0, sw) * -1.1);
+  limb(neck, sw * 1.1, 17 * s, 16 * s, -1.3);
+  cx.strokeStyle = "#FFFFFF"; cx.beginPath(); cx.moveTo(hip.x, hip.y); cx.lineTo(neck.x, neck.y); cx.stroke();
+  limb(hip, sw * 0.9, 22 * s, 22 * s, air ? -1.2 : Math.max(0, -sw) * -1.1);
+  cx.strokeStyle = "#FFE45C"; limb(neck, -sw * 1.1, 17 * s, 16 * s, -1.3);
+  cx.fillStyle = "#FFE45C"; cx.beginPath(); cx.arc(neck.x + 3 * s, neck.y - 15 * s, 12 * s, 0, Math.PI * 2); cx.fill();
+}
+function drawHUD() {
+  const small = W < 560, pad = 12;
+  cx.textBaseline = "alphabetic"; cx.textAlign = "left";
+  // stats row
+  cx.font = `800 ${small ? 18 : 22}px "Bricolage Grotesque", system-ui, sans-serif`; cx.fillStyle = C.text;
+  const scoreTxt = G.score.toLocaleString(), scoreW = cx.measureText(scoreTxt).width;
+  cx.fillText(scoreTxt, pad, 30);
+  const mult = Math.min(5, 1 + Math.floor(G.combo / 3));
+  if (G.combo > 0) { cx.font = `700 ${small ? 12 : 14}px "Atkinson Hyperlegible", system-ui, sans-serif`; cx.fillStyle = C.lane; cx.fillText(`streak ${G.combo}${mult > 1 ? ` · ×${mult}` : ""}`, pad + scoreW + 12, 29); }
+  cx.textAlign = "right";
+  if (G.mode === "survive") { cx.font = `${small ? 18 : 22}px system-ui, sans-serif`; cx.fillStyle = C.bad; cx.fillText("♥".repeat(Math.max(0, G.lives)) + "♡".repeat(Math.max(0, 3 - G.lives)), W - pad, 30); }
+  else { cx.font = `800 ${small ? 18 : 22}px "Bricolage Grotesque", system-ui, sans-serif`; cx.fillStyle = G.time < 10 ? C.bad : C.text; cx.fillText(`${Math.ceil(G.time)}s`, W - pad, 30); }
+  // clue panel
+  const g = nearestGate();
+  const fs = small ? 15 : W < 800 ? 17 : 19, lh = fs * 1.3;
+  cx.font = `400 ${fs}px "Source Serif 4", Georgia, serif`;
+  let lines = [];
+  const flash = G.flash && G.flash.until > G.runT ? G.flash.t : null;
+  if (flash) lines = wrap(`${flash.w}: ${flash.def}`, W - pad * 2 - 28);
+  else if (g) lines = wrap(clueText(g.t), W - pad * 2 - 28);
+  lines = lines.slice(0, 5);
+  const boxH = 30 + lines.length * lh + 10, by = 42;
+  cx.fillStyle = flash ? "rgba(120,20,40,.88)" : "rgba(12,14,40,.85)"; rr(pad, by, W - pad * 2, boxH, 10); cx.fill();
+  cx.strokeStyle = flash ? C.bad : "rgba(255,228,92,.55)"; cx.lineWidth = 1.5; cx.stroke();
+  cx.textAlign = "left"; cx.font = `700 11px "Atkinson Hyperlegible", system-ui, sans-serif`; cx.fillStyle = flash ? "#FFD0D8" : C.lane;
+  cx.fillText(flash ? "REMEMBER THIS ONE" : g ? (G.clue === "sent" ? "WHICH WORD FILLS THE BLANK?" : G.clue === "syn" ? "WHICH WORD MATCHES THESE SYNONYMS?" : "WHICH WORD MEANS…") : "GET READY", pad + 14, by + 20);
+  cx.font = `400 ${fs}px "Source Serif 4", Georgia, serif`; cx.fillStyle = C.text;
+  lines.forEach((l, k) => cx.fillText(l, pad + 14, by + 30 + (k + 0.8) * lh));
+  // lane chips
+  if (g) {
+    const cy = Math.max(by + boxH + 22, horizon() - 20);
+    cx.font = `700 ${small ? 13 : 15}px "Bricolage Grotesque", system-ui, sans-serif`; cx.textAlign = "center"; cx.textBaseline = "middle";
+    for (let l = 0; l < 3; l++) {
+      const x = W / 2 + (l - 1) * Math.min(W * 0.31, 260), on = G.lane === l, tw = Math.min(W * 0.3 - 6, cx.measureText(g.words[l].w).width + 26);
+      cx.fillStyle = on ? C.lane : "rgba(12,14,40,.85)"; rr(x - tw / 2, cy - 14, tw, 28, 14); cx.fill();
+      cx.strokeStyle = on ? C.lane : "rgba(255,255,255,.25)"; cx.lineWidth = 1; cx.stroke();
+      cx.fillStyle = on ? "#141B2E" : C.text; cx.fillText(g.words[l].w, x, cy + 1, tw - 10);
+    }
+  }
+  // floats
+  cx.textAlign = "center"; cx.textBaseline = "middle";
+  G.floats.forEach((f, k) => { cx.globalAlpha = 1 - f.t / 1.1; cx.font = `800 ${small ? 18 : 24}px "Bricolage Grotesque", system-ui, sans-serif`; cx.fillStyle = f.color; cx.fillText(f.text, W / 2, H * 0.62 - f.t * 50 - k * 28); });
+  cx.globalAlpha = 1;
+  if (G.state === "count") {
+    cx.fillStyle = "rgba(6,7,22,.55)"; cx.fillRect(0, 0, W, H);
+    cx.font = `800 96px "Bricolage Grotesque", system-ui, sans-serif`; cx.fillStyle = C.lane; cx.fillText(Math.ceil(G.count), W / 2, H / 2);
+    cx.font = `700 16px "Atkinson Hyperlegible", system-ui, sans-serif`; cx.fillStyle = C.text;
+    cx.fillText(W < 700 ? "Swipe or tap sides to switch lanes · tap middle to jump" : "← → switch lanes · Space jumps the red barriers", W / 2, H / 2 + 70);
+  }
+}
+
+// ───────────────────────── Boot ─────────────────────────
+renderStreak();
+go("today");
+</script>
