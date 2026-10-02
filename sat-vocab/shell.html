@@ -47,6 +47,7 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { background: var(--bg); color: var(--ink); }
 body { font: 16px/1.5 var(--f-ui); margin: 0; }
 button, input, select, textarea { font: inherit; color: inherit; }
@@ -256,9 +257,8 @@ select.sel { border: 1px solid var(--line); background: var(--surface); border-r
 .overlay .btn.ghost { background: transparent; color: #F3F1FF; border-color: rgba(255,255,255,.3); }
 .overlay .missed { display: grid; gap: 6px; text-align: left; max-width: 460px; margin: 6px auto; font-size: 14px; }
 .overlay .missed div { background: rgba(255,255,255,.08); border-radius: 6px; padding: 6px 10px; }
-.touch-pad { display: none; gap: 8px; margin-top: 10px; }
-.touch-pad button { flex: 1; padding: 16px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); font-weight: 800; font-size: 16px; touch-action: manipulation; }
-@media (hover: none), (max-width: 700px) { .touch-pad { display: flex; } }
+.run-type { margin-top: 10px; display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center; }
+.run-type label { font-weight: 700; font-size: 14px; }
 .keys { font-size: 13px; color: var(--ink-2); }
 .keys kbd { border: 1px solid var(--line); border-radius: 4px; padding: 0 6px; font-family: var(--f-ui); background: var(--surface); }
 .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 999px; font-weight: 700; font-size: 14px; z-index: 50; box-shadow: var(--shadow); }
@@ -316,7 +316,7 @@ select.sel { border: 1px solid var(--line); background: var(--surface); border-r
         <div>
           <div class="eyebrow">Word Runner</div>
           <h1>Run the gates</h1>
-          <p class="muted" style="margin:6px 0 0;max-width:60ch">A clue appears at the top. Three gates race toward you, each with a word. Switch lanes into the gate that matches, jump the barriers, and grab the stars. Pick the sets you want to play with.</p>
+          <p class="muted" style="margin:6px 0 0;max-width:60ch">A clue appears at the top and a locked gate races toward you. Type the word from memory to open it before you reach it. The faster you recall it, the bigger the bonus. Wait too long and the first letters appear as a hint. Pick the sets you want to play with.</p>
         </div>
         <div class="panel">
           <div class="row" style="justify-content:space-between">
@@ -346,24 +346,20 @@ select.sel { border: 1px solid var(--line); background: var(--surface); border-r
           </div>
         </div>
         <button class="btn hi" id="startRun" style="justify-content:center;font-size:17px;padding:14px">Start running</button>
-        <div class="keys"><kbd>←</kbd> <kbd>→</kbd> switch lanes · <kbd>↑</kbd> or <kbd>Space</kbd> jump · <kbd>P</kbd> pause. On a phone, swipe or use the buttons.</div>
+        <div class="keys">Just type. <kbd>Backspace</kbd> fixes a letter, <kbd>Esc</kbd> pauses. Works with a phone keyboard too.</div>
         <div class="muted" style="font-size:14px">Best score: <b id="bestScore">0</b></div>
       </div>
     </div>
     <div id="runnerGame" hidden>
       <div class="row" style="justify-content:space-between;margin-bottom:10px">
         <button class="btn sm" id="quitRun">← Back to setup</button>
-        <span class="keys"><kbd>←</kbd><kbd>→</kbd> lanes · <kbd>Space</kbd> jump · <kbd>P</kbd> pause</span>
+        <button class="btn sm" id="pauseRun">Pause</button>
       </div>
       <div class="game-wrap" id="gameWrap">
         <canvas id="game" aria-label="Word Runner game"></canvas>
         <div class="overlay" id="gameOverlay" hidden></div>
       </div>
-      <div class="touch-pad">
-        <button id="tpL" aria-label="Move left">◀ Left</button>
-        <button id="tpJ" aria-label="Jump">▲ Jump</button>
-        <button id="tpR" aria-label="Move right">Right ▶</button>
-      </div>
+      <div class="run-type"><label for="runIn">Type the word</label><input class="text" id="runIn" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done"></div>
     </div>
   </section>
 </main>

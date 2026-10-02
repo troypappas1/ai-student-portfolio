@@ -47,6 +47,7 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { background: var(--bg); color: var(--ink); }
 body { font: 16px/1.5 var(--f-ui); margin: 0; }
 button, input, select, textarea { font: inherit; color: inherit; }
@@ -256,9 +257,8 @@ select.sel { border: 1px solid var(--line); background: var(--surface); border-r
 .overlay .btn.ghost { background: transparent; color: #F3F1FF; border-color: rgba(255,255,255,.3); }
 .overlay .missed { display: grid; gap: 6px; text-align: left; max-width: 460px; margin: 6px auto; font-size: 14px; }
 .overlay .missed div { background: rgba(255,255,255,.08); border-radius: 6px; padding: 6px 10px; }
-.touch-pad { display: none; gap: 8px; margin-top: 10px; }
-.touch-pad button { flex: 1; padding: 16px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); font-weight: 800; font-size: 16px; touch-action: manipulation; }
-@media (hover: none), (max-width: 700px) { .touch-pad { display: flex; } }
+.run-type { margin-top: 10px; display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center; }
+.run-type label { font-weight: 700; font-size: 14px; }
 .keys { font-size: 13px; color: var(--ink-2); }
 .keys kbd { border: 1px solid var(--line); border-radius: 4px; padding: 0 6px; font-family: var(--f-ui); background: var(--surface); }
 .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 999px; font-weight: 700; font-size: 14px; z-index: 50; box-shadow: var(--shadow); }
@@ -316,7 +316,7 @@ select.sel { border: 1px solid var(--line); background: var(--surface); border-r
         <div>
           <div class="eyebrow">Word Runner</div>
           <h1>Run the gates</h1>
-          <p class="muted" style="margin:6px 0 0;max-width:60ch">A clue appears at the top. Three gates race toward you, each with a word. Switch lanes into the gate that matches, jump the barriers, and grab the stars. Pick the sets you want to play with.</p>
+          <p class="muted" style="margin:6px 0 0;max-width:60ch">A clue appears at the top and a locked gate races toward you. Type the word from memory to open it before you reach it. The faster you recall it, the bigger the bonus. Wait too long and the first letters appear as a hint. Pick the sets you want to play with.</p>
         </div>
         <div class="panel">
           <div class="row" style="justify-content:space-between">
@@ -346,24 +346,20 @@ select.sel { border: 1px solid var(--line); background: var(--surface); border-r
           </div>
         </div>
         <button class="btn hi" id="startRun" style="justify-content:center;font-size:17px;padding:14px">Start running</button>
-        <div class="keys"><kbd>←</kbd> <kbd>→</kbd> switch lanes · <kbd>↑</kbd> or <kbd>Space</kbd> jump · <kbd>P</kbd> pause. On a phone, swipe or use the buttons.</div>
+        <div class="keys">Just type. <kbd>Backspace</kbd> fixes a letter, <kbd>Esc</kbd> pauses. Works with a phone keyboard too.</div>
         <div class="muted" style="font-size:14px">Best score: <b id="bestScore">0</b></div>
       </div>
     </div>
     <div id="runnerGame" hidden>
       <div class="row" style="justify-content:space-between;margin-bottom:10px">
         <button class="btn sm" id="quitRun">← Back to setup</button>
-        <span class="keys"><kbd>←</kbd><kbd>→</kbd> lanes · <kbd>Space</kbd> jump · <kbd>P</kbd> pause</span>
+        <button class="btn sm" id="pauseRun">Pause</button>
       </div>
       <div class="game-wrap" id="gameWrap">
         <canvas id="game" aria-label="Word Runner game"></canvas>
         <div class="overlay" id="gameOverlay" hidden></div>
       </div>
-      <div class="touch-pad">
-        <button id="tpL" aria-label="Move left">◀ Left</button>
-        <button id="tpJ" aria-label="Jump">▲ Jump</button>
-        <button id="tpR" aria-label="Move right">Right ▶</button>
-      </div>
+      <div class="run-type"><label for="runIn">Type the word</label><input class="text" id="runIn" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done"></div>
     </div>
   </section>
 </main>
@@ -723,7 +719,7 @@ function renderToday() {
   }
   h += `</div><div class="stack"><div class="quick">
       <button data-mixed ${nl ? "" : "disabled"}><span class="ico">↻</span><div><b>Mixed refresh</b><span>${nl ? "10 random words from sets you've learned" : "Unlocks after your first set"}</span></div></button>
-      <button data-go-runner><span class="ico">▲</span><div><b>Word Runner</b><span>Dodge, jump, and pick the right gate</span></div></button>
+      <button data-go-runner><span class="ico">▲</span><div><b>Word Runner</b><span>Type words from memory to open the gates</span></div></button>
       <button data-tutor-quiz><span class="ico">✎</span><div><b>Quiz me on Set ${focusSet()}</b><span>The AI tutor asks one question at a time</span></div></button>
     </div>
     <div class="panel"><div class="eyebrow">Progress</div><div style="margin:10px 0 6px" class="bar"><i style="width:${(nl / NSETS) * 100}%"></i></div>
@@ -1142,14 +1138,14 @@ $("#pickClear").onclick = () => { pick = new Set(); syncPick(); };
 $("#startRun").onclick = () => { if (!pick.size) { toast("Pick at least one set to play."); return; } startGame(); };
 $("#quitRun").onclick = () => { stopGame(); renderRunnerSetup(); };
 
-const cv = $("#game"), cx = cv.getContext("2d");
+const cv = $("#game"), cx = cv.getContext("2d"), runIn = $("#runIn");
 let W = 0, H = 0, G = null, raf = 0;
-const C = { sky1: "#070818", sky2: "#1B1446", road: "#12163A", side: "#0A0C26", grid: "rgba(97,120,255,.28)", lane: "#FFE45C", text: "#F3F1FF", dim: "#A9A6D6", good: "#3CE39B", bad: "#FF5D78", bar: "#FF5D78", star: "#FFE45C" };
-const SPAWN = 80, GAP = 58, PZ = 1.6, DEPTH = 7;
+const C = { sky1: "#070818", sky2: "#1B1446", road: "#12163A", side: "#0A0C26", grid: "rgba(97,120,255,.28)", lane: "#FFE45C", text: "#F3F1FF", dim: "#8E8BC0", good: "#3CE39B", bad: "#FF5D78" };
+const SPAWN = 80, PZ = 1.6, DEPTH = 7;
 
 function sizeCanvas() {
   const w = $("#gameWrap").clientWidth || 800;
-  const h = Math.round(Math.min(620, Math.max(460, w * 0.66)));
+  const h = Math.round(Math.min(600, Math.max(420, w * 0.62)));
   const dpr = Math.min(2, window.devicePixelRatio || 1);
   cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); cv.style.height = h + "px";
   W = w; H = h; cx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -1162,40 +1158,28 @@ function startGame() {
   const pool = [...pick].sort((a, b) => a - b).flatMap(setWords);
   const clue = document.querySelector('input[name="clue"]:checked').value;
   const mode = document.querySelector('input[name="mode"]:checked').value;
-  G = { pool, deck: [], clue, mode, lane: 1, x: 1, jumpT: -1, objs: [], dist: 0, nextGate: 14, nextBits: 30, speed: 11, score: 0, combo: 0, lives: 3, time: 90, inv: 0,
+  G = { pool, deck: [], clue, mode, gate: null, typed: "", wrongT: 0, wait: 0.5, dist: 0, speed: 9, score: 0, combo: 0, lives: 3, time: 90,
         shake: 0, parts: [], floats: [], results: [], state: "count", count: 3, runT: 0, flash: null, last: performance.now() };
   $("#gameOverlay").hidden = true;
+  runIn.value = ""; runIn.disabled = false;
   cancelAnimationFrame(raf); raf = requestAnimationFrame(loop);
-  $("#gameWrap").scrollIntoView({ behavior: "smooth", block: "center" });
+  $("#gameWrap").scrollIntoView({ behavior: "smooth", block: "start" });
+  runIn.focus({ preventScroll: true });
 }
 function stopGame() { cancelAnimationFrame(raf); raf = 0; G = null; }
 
-function drawWord() {
-  if (!G.deck.length) G.deck = shuffle(G.pool);
-  return G.deck.pop();
-}
 function spawnGate() {
-  const t = drawWord();
-  const same = G.pool.filter(x => x !== t && !tooClose(t, x));
-  let opts = shuffle(same.filter(x => x.pos === t.pos)).slice(0, 2);
-  if (opts.length < 2) opts = opts.concat(shuffle(same.filter(x => !opts.includes(x)))).slice(0, 2);
-  if (opts.length < 2) opts = opts.concat(pickDistractors(t, [], 2 - opts.length));
-  const words = shuffle([t, ...opts]);
-  G.objs.push({ type: "gate", z: SPAWN, words, correct: words.indexOf(t), t, done: false });
+  if (!G.deck.length) G.deck = shuffle(G.pool);
+  G.gate = { z: SPAWN, t: G.deck.pop(), open: false, passed: false };
+  G.typed = ""; runIn.value = "";
 }
-function spawnBits() {
-  const lane = Math.floor(Math.random() * 3);
-  if (Math.random() < 0.7) G.objs.push({ type: "bar", z: SPAWN, lane, hit: false });
-  const sl = (lane + 1 + Math.floor(Math.random() * 2)) % 3;
-  for (let k = 0; k < 3; k++) G.objs.push({ type: "star", z: SPAWN + k * 2.2, lane: sl, got: false });
-}
-const nearestGate = () => G.objs.filter(o => o.type === "gate" && !o.done).sort((a, b) => a.z - b.z)[0];
-
 function clueText(t) {
   if (G.clue === "sent") return t.q.replace(/_{3,}/, "_____");
   if (G.clue === "syn") return "Synonyms: " + t.syn.join(", ");
   return t.def;
 }
+// Letters given away as the gate gets close: none, then the first, then the first two.
+const hintCount = g => (g.z < SPAWN * 0.25 ? 2 : g.z < SPAWN * 0.5 ? 1 : 0);
 
 function loop(now) {
   if (!G) return;
@@ -1205,66 +1189,51 @@ function loop(now) {
 }
 function update(dt) {
   G.shake = Math.max(0, G.shake - dt * 30);
+  G.wrongT = Math.max(0, G.wrongT - dt);
   G.floats.forEach(f => (f.t += dt)); G.floats = G.floats.filter(f => f.t < 1.1);
   G.parts.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 600 * dt; p.t += dt; }); G.parts = G.parts.filter(p => p.t < 0.8);
   if (G.state === "count") { G.count -= dt; if (G.count <= 0) G.state = "run"; return; }
   if (G.state !== "run") return;
   G.runT += dt;
-  G.x += (G.lane - G.x) * Math.min(1, dt * 14);
-  if (G.jumpT >= 0) { G.jumpT += dt; if (G.jumpT > 0.62) G.jumpT = -1; }
-  G.inv = Math.max(0, G.inv - dt);
   if (G.mode === "sprint") { G.time -= dt; if (G.time <= 0) { G.time = 0; return endGame(); } }
-  const dz = G.speed * dt;
-  G.dist += dz;
-  G.objs.forEach(o => (o.z -= dz));
-  G.nextGate -= dz; G.nextBits -= dz;
-  if (G.nextGate <= 0) { spawnGate(); G.nextGate += GAP; }
-  if (G.nextBits <= 0) { spawnBits(); G.nextBits += GAP; }
-  const laneNow = Math.round(G.x), air = jumpH() > 0.35;
-  for (const o of G.objs) {
-    if (o.type === "gate" && !o.done && o.z <= PZ) resolveGate(o);
-    if (o.type === "bar" && !o.hit && o.z <= PZ + 0.5 && o.z > PZ - 0.9 && o.lane === laneNow && !air && G.inv <= 0) {
-      o.hit = true; G.inv = 1.2; G.shake = 10; G.combo = 0;
-      if (G.mode === "survive") G.lives--; else G.time = Math.max(0, G.time - 4);
-      G.floats.push({ text: G.mode === "survive" ? "Ouch! −1 life" : "Ouch! −4s", color: C.bad, t: 0 });
-      if (G.lives <= 0) return endGame();
-    }
-    if (o.type === "star" && !o.got && Math.abs(o.z - PZ) < 0.8 && o.lane === laneNow) { o.got = true; G.score += 10; burst(C.star, 6); }
-  }
-  G.objs = G.objs.filter(o => o.z > -4);
+  const g = G.gate;
+  if (!g) { G.dist += G.speed * dt; G.wait -= dt; if (G.wait <= 0) spawnGate(); return; }
+  const dz = G.speed * (g.open ? 5 : 1) * dt;   // an opened gate lets you sprint through
+  G.dist += dz; g.z -= dz;
+  if (!g.open && !g.passed && G.typed === g.t.w) solveGate(g);
+  if (g.z <= PZ && !g.passed) { g.passed = true; if (g.open) burst(C.good, 18); else { missGate(g); if (G.state !== "run") return; } }
+  if (g.z < -3) { G.wait = g.open ? 0.3 : 1.7; G.gate = null; G.typed = ""; runIn.value = ""; }
 }
-function resolveGate(o) {
-  o.done = true;
-  const lane = G.lane, ok = lane === o.correct;
-  o.picked = lane;
-  G.results.push({ w: o.t, ok });
-  if (ok) {
-    G.combo++;
-    const mult = Math.min(5, 1 + Math.floor(G.combo / 3));
-    G.score += 100 * mult; G.speed = Math.min(24, G.speed + 0.35);
-    if (G.mode === "sprint") G.time += 2;
-    G.floats.push({ text: `+${100 * mult}  ${o.t.w}${mult > 1 ? `  ×${mult}` : ""}`, color: C.good, t: 0 });
-    burst(C.good, 18);
-  } else {
-    G.combo = 0; G.shake = 12; addMiss(o.t.w); save();
-    if (G.mode === "survive") G.lives--; else G.time = Math.max(0, G.time - 5);
-    G.floats.push({ text: `It was “${o.t.w}”`, color: C.bad, t: 0 });
-    G.flash = { t: o.t, until: G.runT + 2.2 };
-    if (G.lives <= 0) endGame();
-  }
+function solveGate(g) {
+  g.open = true;
+  G.combo++;
+  const mult = Math.min(5, 1 + Math.floor(G.combo / 3));
+  const pts = (100 + Math.round((g.z / SPAWN) * 100)) * mult;   // faster recall, bigger bonus
+  G.score += pts; G.speed = Math.min(15, G.speed + 0.2);
+  if (G.mode === "sprint") G.time += 2;
+  G.results.push({ w: g.t, ok: true });
+  G.floats.push({ text: `+${pts}${mult > 1 ? `  ×${mult}` : ""}`, color: C.good, t: 0 });
+}
+function missGate(g) {
+  G.combo = 0; G.shake = 12; addMiss(g.t.w); save();
+  G.results.push({ w: g.t, ok: false });
+  if (G.mode === "survive") G.lives--; else G.time = Math.max(0, G.time - 5);
+  G.floats.push({ text: `It was “${g.t.w}”`, color: C.bad, t: 0 });
+  G.flash = { t: g.t, until: G.runT + 2.4 };
+  if (G.mode === "survive" && G.lives <= 0) endGame();
 }
 function burst(color, n) {
   const p = playerPos();
   for (let k = 0; k < n; k++) { const a = Math.random() * Math.PI * 2, s = 120 + Math.random() * 220; G.parts.push({ x: p.x, y: p.y - 40, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 180, t: 0, color }); }
 }
 function endGame() {
-  G.state = "over";
+  G.state = "over"; runIn.disabled = true;
   const best = Math.max(S.best || 0, G.score), isBest = G.score > (S.best || 0) && G.score > 0;
   S.best = best; save(); markDay();
   const right = G.results.filter(r => r.ok).length, missed = [...new Map(G.results.filter(r => !r.ok).map(r => [r.w.w, r.w])).values()];
   const ov = $("#gameOverlay");
   ov.innerHTML = `<div style="display:grid;gap:12px;justify-items:center"><h2>${G.mode === "sprint" ? "Time!" : "Game over"}</h2>
-    <div class="big">${G.score.toLocaleString()}</div><div>${isBest ? "New best score!" : `Best: ${best.toLocaleString()}`} · ${right} of ${G.results.length} gates correct</div>
+    <div class="big">${G.score.toLocaleString()}</div><div>${isBest ? "New best score!" : `Best: ${best.toLocaleString()}`} · ${right} of ${G.results.length} words typed from memory</div>
     ${missed.length ? `<div class="missed"><div style="background:none;padding:0;color:#FFE45C;font-weight:700">Review these</div>${missed.map(w => `<div><b>${esc(w.w)}</b>: ${esc(w.def)}</div>`).join("")}</div>` : ""}
     <div class="row" style="justify-content:center"><button class="btn" id="again">Play again</button><button class="btn ghost" id="toSetup">Change sets</button></div></div>`;
   ov.hidden = false;
@@ -1279,41 +1248,36 @@ function togglePause() {
     G.state = "pause";
     ov.innerHTML = `<div style="display:grid;gap:12px;justify-items:center"><h2>Paused</h2><button class="btn" id="resume">Resume</button></div>`;
     ov.hidden = false; $("#resume").onclick = togglePause; $("#resume").focus();
-  } else { G.state = "run"; G.last = performance.now(); ov.hidden = true; }
+  } else { G.state = "run"; G.last = performance.now(); ov.hidden = true; runIn.focus({ preventScroll: true }); }
 }
 document.addEventListener("visibilitychange", () => { if (document.hidden && G && G.state === "run") togglePause(); });
+$("#pauseRun").onclick = togglePause;
 
-// Controls
-function move(d) { if (G && G.state === "run") G.lane = Math.max(0, Math.min(2, G.lane + d)); }
-function jump() { if (G && G.state === "run" && G.jumpT < 0) G.jumpT = 0; }
+// Typing
+runIn.addEventListener("input", () => {
+  const g = G && G.state === "run" ? G.gate : null;
+  if (!g || g.open || g.passed) { runIn.value = G ? G.typed : ""; return; }
+  const v = runIn.value.toLowerCase().replace(/[^a-z]/g, "").slice(0, g.t.w.length);
+  runIn.value = v; G.typed = v;
+  if (v.length === g.t.w.length && v !== g.t.w) G.wrongT = 0.4;
+});
 document.addEventListener("keydown", e => {
-  if (!G || view !== "runner" || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
-  const k = e.key;
-  if (k === "ArrowLeft" || k === "a" || k === "A") { move(-1); e.preventDefault(); }
-  else if (k === "ArrowRight" || k === "d" || k === "D") { move(1); e.preventDefault(); }
-  else if (k === "ArrowUp" || k === "w" || k === "W" || (k === " " && G.state === "run")) { jump(); e.preventDefault(); }
-  else if (k === "p" || k === "P" || (k === "Escape" && G.state !== "over")) { togglePause(); e.preventDefault(); }
+  if (!G || view !== "runner") return;
+  if (e.key === "Escape" && G.state !== "over") { togglePause(); e.preventDefault(); return; }
+  if (e.key === "Enter" && e.target === runIn) { e.preventDefault(); return; }
+  // Any letter typed elsewhere on the page lands in the answer box.
+  if (G.state !== "over" && G.state !== "pause" && e.target !== runIn && !e.metaKey && !e.ctrlKey && /^[a-zA-Z]$|^Backspace$/.test(e.key)) runIn.focus({ preventScroll: true });
 });
-let ptr = null;
-cv.addEventListener("pointerdown", e => { ptr = { x: e.clientX, y: e.clientY }; });
-cv.addEventListener("pointerup", e => {
-  if (!ptr) return;
-  const dx = e.clientX - ptr.x, dy = e.clientY - ptr.y; ptr = null;
-  if (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy)) move(dx > 0 ? 1 : -1);
-  else if (dy < -30) jump();
-  else { const r = cv.getBoundingClientRect(), fx = (e.clientX - r.left) / r.width; if (fx < 0.33) move(-1); else if (fx > 0.67) move(1); else jump(); }
-});
-[["#tpL", () => move(-1)], ["#tpR", () => move(1)], ["#tpJ", jump]].forEach(([s, f]) => $(s).addEventListener("pointerdown", e => { e.preventDefault(); f(); }));
+cv.addEventListener("pointerup", () => { if (G && G.state !== "over") runIn.focus({ preventScroll: true }); });
 
 // Projection
-const horizon = () => H * 0.42;
+const horizon = () => H * 0.5;
 const groundY = () => H - 14;
 const scaleAt = z => DEPTH / (DEPTH + Math.max(z, -DEPTH + 0.5));
 const yAt = z => horizon() + (groundY() - horizon()) * scaleAt(z);
 const halfW = z => Math.min(W * 0.47, 440) * scaleAt(z);
 const laneX = (l, z) => W / 2 + (l - 1) * halfW(z) * (2 / 3);
-const jumpH = () => (G.jumpT < 0 ? 0 : Math.sin((G.jumpT / 0.62) * Math.PI));
-function playerPos() { const s = scaleAt(PZ); return { x: laneX(G.x, PZ), y: yAt(PZ) - jumpH() * 110 * s, s }; }
+function playerPos() { return { x: W / 2, y: yAt(PZ), s: scaleAt(PZ) }; }
 
 function wrap(text, maxW) {
   const words = text.split(" "), lines = []; let line = "";
@@ -1327,21 +1291,17 @@ function draw() {
   const hz = horizon();
   cx.save();
   if (G.shake > 0) cx.translate((Math.random() - 0.5) * G.shake, (Math.random() - 0.5) * G.shake);
-  // sky
   const sky = cx.createLinearGradient(0, 0, 0, hz); sky.addColorStop(0, C.sky1); sky.addColorStop(1, C.sky2);
   cx.fillStyle = sky; cx.fillRect(-20, -20, W + 40, hz + 20);
-  // city skyline of letters
   cx.fillStyle = "rgba(129,151,255,.16)";
   for (let k = 0; k < 18; k++) { const bw = W / 18, bh = 18 + ((k * 37) % 50); cx.fillRect(k * bw + 2, hz - bh, bw - 4, bh); }
   const glow = cx.createLinearGradient(0, hz - 30, 0, hz + 6); glow.addColorStop(0, "rgba(255,228,92,0)"); glow.addColorStop(1, "rgba(255,228,92,.35)");
   cx.fillStyle = glow; cx.fillRect(0, hz - 30, W, 36);
-  // ground
   cx.fillStyle = C.side; cx.fillRect(-20, hz, W + 40, H - hz + 20);
   cx.strokeStyle = C.grid; cx.lineWidth = 1;
   const off = G.dist % 4;
   for (let z = 4 - off; z < SPAWN; z += 4) { const y = yAt(z); cx.beginPath(); cx.moveTo(0, y); cx.lineTo(W, y); cx.stroke(); }
   for (let k = -8; k <= 8; k++) { cx.beginPath(); cx.moveTo(W / 2 + k * W * 0.02, hz); cx.lineTo(W / 2 + k * W * 0.35, H); cx.stroke(); }
-  // road
   cx.fillStyle = C.road; cx.beginPath();
   cx.moveTo(W / 2 - halfW(SPAWN), yAt(SPAWN)); cx.lineTo(W / 2 + halfW(SPAWN), yAt(SPAWN)); cx.lineTo(W / 2 + halfW(-3), yAt(-3)); cx.lineTo(W / 2 - halfW(-3), yAt(-3)); cx.fill();
   cx.strokeStyle = C.lane; cx.lineWidth = 2;
@@ -1349,71 +1309,51 @@ function draw() {
   for (let z = -2 - (G.dist % 5); z < SPAWN; z += 5) {
     [0.5, 1.5].forEach(l => { const x1 = laneX(l, z), x2 = laneX(l, z + 2.2); cx.lineWidth = Math.max(1, 5 * scaleAt(z)); cx.beginPath(); cx.moveTo(x1, yAt(z)); cx.lineTo(x2, yAt(z + 2.2)); cx.stroke(); });
   }
-  // objects, far to near
-  const objs = G.objs.slice().sort((a, b) => b.z - a.z);
-  const pz = PZ;
-  let playerDrawn = false;
-  for (const o of objs) {
-    if (!playerDrawn && o.z < pz) { drawPlayer(); playerDrawn = true; }
-    if (o.type === "gate") drawGate(o);
-    else if (o.type === "bar" && !o.hit) drawBar(o);
-    else if (o.type === "star" && !o.got) drawStar(o);
-  }
-  if (!playerDrawn) drawPlayer();
-  // particles
+  const g = G.gate;
+  if (g && g.z >= PZ) drawGate(g);
+  drawPlayer();
+  if (g && g.z < PZ) drawGate(g);
   G.parts.forEach(p => { cx.globalAlpha = 1 - p.t / 0.8; cx.fillStyle = p.color; cx.fillRect(p.x - 3, p.y - 3, 6, 6); }); cx.globalAlpha = 1;
   cx.restore();
   drawHUD();
 }
-function drawGate(o) {
-  if (o.z < -1.5) return;
-  const s = scaleAt(o.z), y = yAt(o.z), lw = halfW(o.z) * (2 / 3);
-  const pw = lw * 0.9, ph = Math.max(10, lw * 0.34), top = y - lw * 0.95;
-  for (let l = 0; l < 3; l++) {
-    const x = laneX(l, o.z);
-    let border = C.lane, fill = "rgba(20,24,70,.82)";
-    if (o.done) { if (l === o.correct) { border = C.good; fill = "rgba(20,110,70,.85)"; } else if (l === o.picked) { border = C.bad; fill = "rgba(120,20,40,.85)"; } else { border = "rgba(255,255,255,.2)"; } }
-    cx.strokeStyle = border; cx.lineWidth = Math.max(1, 3 * s);
-    cx.beginPath(); cx.moveTo(x - pw / 2, y); cx.lineTo(x - pw / 2, top + ph); cx.moveTo(x + pw / 2, y); cx.lineTo(x + pw / 2, top + ph); cx.stroke();
-    cx.fillStyle = fill; rr(x - pw / 2, top, pw, ph, 4 * s); cx.fill(); cx.stroke();
-    const fs = Math.min(34, pw / Math.max(6, o.words[l].w.length) * 1.55);
-    if (fs >= 6) { cx.fillStyle = C.text; cx.font = `700 ${fs}px "Bricolage Grotesque", system-ui, sans-serif`; cx.textAlign = "center"; cx.textBaseline = "middle"; cx.fillText(o.words[l].w, x, top + ph / 2 + 1); }
+function drawGate(g) {
+  if (g.z < -1.5) return;
+  const s = scaleAt(g.z), y = yAt(g.z), hw = halfW(g.z), h = hw * 0.85, top = y - h;
+  const col = g.open ? C.good : g.passed ? C.bad : C.lane;
+  cx.lineWidth = Math.max(1.5, 5 * s); cx.strokeStyle = col;
+  // posts and banner
+  cx.beginPath(); cx.moveTo(-hw + W / 2, y); cx.lineTo(-hw + W / 2, top); cx.lineTo(hw + W / 2, top); cx.lineTo(hw + W / 2, y); cx.stroke();
+  const bh = h * 0.3;
+  cx.fillStyle = g.open ? "rgba(20,110,70,.9)" : "rgba(20,24,70,.92)"; cx.fillRect(W / 2 - hw, top, hw * 2, bh); cx.strokeRect(W / 2 - hw, top, hw * 2, bh);
+  const label = g.open || g.passed ? g.t.w : "?".repeat(g.t.w.length);
+  const fs = Math.min(bh * 0.62, (hw * 2 * 0.9) / label.length * 1.6);
+  if (fs >= 5) { cx.fillStyle = g.open ? "#FFFFFF" : col; cx.font = `800 ${fs}px "Bricolage Grotesque", system-ui, sans-serif`; cx.textAlign = "center"; cx.textBaseline = "middle"; cx.fillText(label, W / 2, top + bh / 2 + 1); }
+  // the locked doors: bars across the opening until the word is typed
+  if (!g.open) {
+    cx.fillStyle = g.passed ? "rgba(255,93,120,.35)" : "rgba(255,228,92,.16)"; cx.fillRect(W / 2 - hw, top + bh, hw * 2, h - bh);
+    cx.lineWidth = Math.max(1, 3 * s);
+    for (let k = 1; k < 8; k++) { const x = W / 2 - hw + (hw * 2 * k) / 8; cx.beginPath(); cx.moveTo(x, top + bh); cx.lineTo(x, y); cx.stroke(); }
   }
-}
-function drawBar(o) {
-  const s = scaleAt(o.z), y = yAt(o.z), lw = halfW(o.z) * (2 / 3), x = laneX(o.lane, o.z);
-  const w = lw * 0.82, h = Math.max(3, lw * 0.22);
-  cx.fillStyle = C.bar; rr(x - w / 2, y - h, w, h, 3 * s); cx.fill();
-  cx.fillStyle = "rgba(255,255,255,.85)";
-  for (let k = 0; k < 4; k++) { const sx = x - w / 2 + (k + 0.25) * (w / 4); cx.beginPath(); cx.moveTo(sx, y - h); cx.lineTo(sx + w / 8, y - h); cx.lineTo(sx + w / 16, y); cx.lineTo(sx - w / 16, y); cx.fill(); }
-}
-function drawStar(o) {
-  const s = scaleAt(o.z), y = yAt(o.z) - halfW(o.z) * 0.18, x = laneX(o.lane, o.z), r = Math.max(2, 22 * s * (W / 900 + 0.4));
-  cx.fillStyle = C.star; cx.beginPath();
-  const rot = G.runT * 3;
-  for (let k = 0; k < 10; k++) { const a = rot + (k * Math.PI) / 5, rad = k % 2 ? r * 0.45 : r; cx.lineTo(x + Math.cos(a) * rad, y + Math.sin(a) * rad); }
-  cx.fill();
 }
 function drawPlayer() {
   const p = playerPos(), s = p.s * Math.min(1.25, Math.max(0.8, W / 800));
-  if (G.inv > 0 && Math.floor(G.inv * 12) % 2) return;
-  const gy = yAt(PZ);
-  cx.fillStyle = "rgba(0,0,0,.45)"; cx.beginPath(); cx.ellipse(p.x, gy, 26 * s * (1 - jumpH() * 0.4), 7 * s, 0, 0, Math.PI * 2); cx.fill();
-  const ph = G.runT * 14, air = G.jumpT >= 0, sw = air ? 0.6 : Math.sin(ph);
+  const boost = G.gate && G.gate.open && !G.gate.passed;
+  cx.fillStyle = "rgba(0,0,0,.45)"; cx.beginPath(); cx.ellipse(p.x, p.y, 26 * s, 7 * s, 0, 0, Math.PI * 2); cx.fill();
+  const ph = G.runT * (boost ? 24 : 14), sw = G.state === "run" ? Math.sin(ph) : 0.4;
   const hip = { x: p.x, y: p.y - 42 * s }, neck = { x: p.x + 4 * s, y: p.y - 78 * s };
-  cx.lineCap = "round"; cx.strokeStyle = "#FFFFFF"; cx.lineWidth = 9 * s;
+  cx.lineCap = "round"; cx.lineWidth = 9 * s;
   const limb = (o, a, len1, len2, bend) => { const k = { x: o.x + Math.sin(a) * len1, y: o.y + Math.cos(a) * len1 }; const e = { x: k.x + Math.sin(a + bend) * len2, y: k.y + Math.cos(a + bend) * len2 }; cx.beginPath(); cx.moveTo(o.x, o.y); cx.lineTo(k.x, k.y); cx.lineTo(e.x, e.y); cx.stroke(); };
-  cx.strokeStyle = "#8197FF"; limb(hip, -sw * 0.9, 22 * s, 22 * s, air ? -1.2 : Math.max(0, sw) * -1.1);
+  cx.strokeStyle = "#8197FF"; limb(hip, -sw * 0.9, 22 * s, 22 * s, Math.max(0, sw) * -1.1);
   limb(neck, sw * 1.1, 17 * s, 16 * s, -1.3);
   cx.strokeStyle = "#FFFFFF"; cx.beginPath(); cx.moveTo(hip.x, hip.y); cx.lineTo(neck.x, neck.y); cx.stroke();
-  limb(hip, sw * 0.9, 22 * s, 22 * s, air ? -1.2 : Math.max(0, -sw) * -1.1);
+  limb(hip, sw * 0.9, 22 * s, 22 * s, Math.max(0, -sw) * -1.1);
   cx.strokeStyle = "#FFE45C"; limb(neck, -sw * 1.1, 17 * s, 16 * s, -1.3);
   cx.fillStyle = "#FFE45C"; cx.beginPath(); cx.arc(neck.x + 3 * s, neck.y - 15 * s, 12 * s, 0, Math.PI * 2); cx.fill();
 }
 function drawHUD() {
   const small = W < 560, pad = 12;
   cx.textBaseline = "alphabetic"; cx.textAlign = "left";
-  // stats row
   cx.font = `800 ${small ? 18 : 22}px "Bricolage Grotesque", system-ui, sans-serif`; cx.fillStyle = C.text;
   const scoreTxt = G.score.toLocaleString(), scoreW = cx.measureText(scoreTxt).width;
   cx.fillText(scoreTxt, pad, 30);
@@ -1423,41 +1363,41 @@ function drawHUD() {
   if (G.mode === "survive") { cx.font = `${small ? 18 : 22}px system-ui, sans-serif`; cx.fillStyle = C.bad; cx.fillText("♥".repeat(Math.max(0, G.lives)) + "♡".repeat(Math.max(0, 3 - G.lives)), W - pad, 30); }
   else { cx.font = `800 ${small ? 18 : 22}px "Bricolage Grotesque", system-ui, sans-serif`; cx.fillStyle = G.time < 10 ? C.bad : C.text; cx.fillText(`${Math.ceil(G.time)}s`, W - pad, 30); }
   // clue panel
-  const g = nearestGate();
+  const g = G.gate && !G.gate.passed ? G.gate : null;
   const fs = small ? 15 : W < 800 ? 17 : 19, lh = fs * 1.3;
   cx.font = `400 ${fs}px "Source Serif 4", Georgia, serif`;
-  let lines = [];
   const flash = G.flash && G.flash.until > G.runT ? G.flash.t : null;
-  if (flash) lines = wrap(`${flash.w}: ${flash.def}`, W - pad * 2 - 28);
-  else if (g) lines = wrap(clueText(g.t), W - pad * 2 - 28);
+  let lines = flash ? wrap(`${flash.w}: ${flash.def}`, W - pad * 2 - 28) : g ? wrap(clueText(g.t), W - pad * 2 - 28) : [];
   lines = lines.slice(0, 5);
-  const boxH = 30 + lines.length * lh + 10, by = 42;
+  const boxH = 30 + Math.max(1, lines.length) * lh + 10, by = 42;
   cx.fillStyle = flash ? "rgba(120,20,40,.88)" : "rgba(12,14,40,.85)"; rr(pad, by, W - pad * 2, boxH, 10); cx.fill();
   cx.strokeStyle = flash ? C.bad : "rgba(255,228,92,.55)"; cx.lineWidth = 1.5; cx.stroke();
   cx.textAlign = "left"; cx.font = `700 11px "Atkinson Hyperlegible", system-ui, sans-serif`; cx.fillStyle = flash ? "#FFD0D8" : C.lane;
-  cx.fillText(flash ? "REMEMBER THIS ONE" : g ? (G.clue === "sent" ? "WHICH WORD FILLS THE BLANK?" : G.clue === "syn" ? "WHICH WORD MATCHES THESE SYNONYMS?" : "WHICH WORD MEANS…") : "GET READY", pad + 14, by + 20);
+  cx.fillText(flash ? "REMEMBER THIS ONE" : g ? (G.clue === "sent" ? "TYPE THE WORD THAT FILLS THE BLANK" : G.clue === "syn" ? "TYPE THE WORD THAT MATCHES" : "TYPE THE WORD THAT MEANS…") : "GET READY", pad + 14, by + 20);
   cx.font = `400 ${fs}px "Source Serif 4", Georgia, serif`; cx.fillStyle = C.text;
   lines.forEach((l, k) => cx.fillText(l, pad + 14, by + 30 + (k + 0.8) * lh));
-  // lane chips
-  if (g) {
-    const cy = Math.max(by + boxH + 22, horizon() - 20);
-    cx.font = `700 ${small ? 13 : 15}px "Bricolage Grotesque", system-ui, sans-serif`; cx.textAlign = "center"; cx.textBaseline = "middle";
-    for (let l = 0; l < 3; l++) {
-      const x = W / 2 + (l - 1) * Math.min(W * 0.31, 260), on = G.lane === l, tw = Math.min(W * 0.3 - 6, cx.measureText(g.words[l].w).width + 26);
-      cx.fillStyle = on ? C.lane : "rgba(12,14,40,.85)"; rr(x - tw / 2, cy - 14, tw, 28, 14); cx.fill();
-      cx.strokeStyle = on ? C.lane : "rgba(255,255,255,.25)"; cx.lineWidth = 1; cx.stroke();
-      cx.fillStyle = on ? "#141B2E" : C.text; cx.fillText(g.words[l].w, x, cy + 1, tw - 10);
+  // letter slots
+  if (g && !flash) {
+    const word = g.t.w, n = word.length, hints = g.open ? 0 : hintCount(g);
+    const bw = Math.min(small ? 26 : 38, (W - 40) / n - 4), gap = 4, total = n * bw + (n - 1) * gap, x0 = W / 2 - total / 2, sy = by + boxH + 12, bhh = bw * 1.2;
+    const wrong = G.wrongT > 0, jig = wrong ? Math.sin(G.wrongT * 60) * 4 : 0;
+    cx.textAlign = "center"; cx.textBaseline = "middle"; cx.font = `800 ${bw * 0.72}px "Bricolage Grotesque", system-ui, sans-serif`;
+    for (let k = 0; k < n; k++) {
+      const x = x0 + k * (bw + gap) + jig, ch = G.typed[k];
+      cx.fillStyle = g.open ? "rgba(20,110,70,.9)" : "rgba(12,14,40,.88)"; rr(x, sy, bw, bhh, 5); cx.fill();
+      cx.strokeStyle = g.open ? C.good : wrong ? C.bad : k === G.typed.length ? C.lane : "rgba(255,255,255,.28)"; cx.lineWidth = k === G.typed.length && !g.open ? 2 : 1; cx.stroke();
+      if (ch) { cx.fillStyle = wrong ? C.bad : C.text; cx.fillText(ch, x + bw / 2, sy + bhh / 2 + 1); }
+      else if (k < hints) { cx.fillStyle = C.dim; cx.fillText(word[k], x + bw / 2, sy + bhh / 2 + 1); }
     }
   }
-  // floats
   cx.textAlign = "center"; cx.textBaseline = "middle";
-  G.floats.forEach((f, k) => { cx.globalAlpha = 1 - f.t / 1.1; cx.font = `800 ${small ? 18 : 24}px "Bricolage Grotesque", system-ui, sans-serif`; cx.fillStyle = f.color; cx.fillText(f.text, W / 2, H * 0.62 - f.t * 50 - k * 28); });
+  G.floats.forEach((f, k) => { cx.globalAlpha = 1 - f.t / 1.1; cx.font = `800 ${small ? 18 : 24}px "Bricolage Grotesque", system-ui, sans-serif`; cx.fillStyle = f.color; cx.fillText(f.text, W / 2, H * 0.7 - f.t * 50 - k * 28); });
   cx.globalAlpha = 1;
   if (G.state === "count") {
     cx.fillStyle = "rgba(6,7,22,.55)"; cx.fillRect(0, 0, W, H);
     cx.font = `800 96px "Bricolage Grotesque", system-ui, sans-serif`; cx.fillStyle = C.lane; cx.fillText(Math.ceil(G.count), W / 2, H / 2);
     cx.font = `700 16px "Atkinson Hyperlegible", system-ui, sans-serif`; cx.fillStyle = C.text;
-    cx.fillText(W < 700 ? "Swipe or tap sides to switch lanes · tap middle to jump" : "← → switch lanes · Space jumps the red barriers", W / 2, H / 2 + 70);
+    cx.fillText("Type each word to open its gate before you reach it", W / 2, H / 2 + 70);
   }
 }
 
